@@ -36,8 +36,8 @@
       function renderGraph(data) {
         var width = scope.width,
           height = scope.height;
-        var nodeHeight = 20,
-          linkDistance = 50;
+        var nodeHeight = 15,
+          linkDistance = 100;
 
         var force = d3.layout.force()
           .size([width, height])
@@ -47,7 +47,26 @@
           .attr("width", width)
           .attr("height", height);
 
+
+        var zoomRectWidth = width - (width / 3);
+        var zoomRectHeight = height - (height / 3);
+
+        var zoomRect = svg.append("rect")
+          .attr("class", "zoomRect")
+          .attr("width", zoomRectWidth)
+          .attr("height", zoomRectHeight)
+          .style("stroke", "gray")
+          .style("stroke-opacity", 0.2)
+          .style("stroke-width", "1px")
+          .style("fill-opacity", 0)
+          .attr("ry", zoomRectWidth/3)
+          .attr("ry", zoomRectHeight/3)
+          .attr("x", (width / 2 - zoomRectWidth / 2))
+          .attr("y", (height / 2 - zoomRectHeight / 2))
+
+
         var g = svg.append("g");
+
         svg.style("cursor", "move");
 
         var _link = g.selectAll(".link"),
@@ -66,11 +85,19 @@
           var nodes = flatten(data),
             links = d3.layout.tree().links(nodes);
 
+          nodes.forEach(function (d, i) {
+            d.x = width / 2 + i;
+            d.y = height / 2 + 100 * d.depth;
+          });
+
 
           force
             .nodes(nodes)
             .links(links)
             .charge(-500)
+            .linkDistance(function (d) {
+              return d.target.children.length > 0 ? 50 : 30;
+            })
             .size([width, height])
             .start();
 
@@ -105,7 +132,7 @@
             .enter()
             .append("g")
             .attr("transform", function (d) {
-              return "translate(" + d.x + "," + d.y + ")";
+              return "translate(" + d.x  + "," + d.y + ")";
             })
             .call(force.drag);
 
@@ -118,22 +145,22 @@
             .text(function (d) {
               return d.name;
             })
-            .style("font-size", "12px")
-            .attr("dy", "1em")
+            .attr("x", 50)
+            .style("font-size", "10px")
             .each(function (d) {
               d.width = this.getBBox().width;
               this.remove();
             });
 
 
-          var rect = node.
-            append("rect")
+          var rect = node
+            .append("rect")
             .attr("class", "rect")
             .attr("width", function (d) {
-              return d.width
+              return d.width + 50;
             })
             .attr("height", nodeHeight)
-            .style("fill", color)
+            .style("fill", fillNodeColor)
             .style("stroke", "black")
             .style("stroke-width", "1px");
 
@@ -141,14 +168,15 @@
             .text(function (d) {
               return d.name;
             })
-            .style("font-size", "12px")
-            .attr("dy", "1em");
+            .style("font-size", "10px")
+            .attr("x", 10)
+            .attr("y", 10);
 
 
           node.on("mouseover", function (d) {
             this.parentNode.appendChild(this);
-            highlightPath(d);
-            paintPath();
+            highlightPathToRoot(d);
+            paintPathToRoot();
           })
             .on("mousedown", function (d) {
               d3.event.stopPropagation();
@@ -156,7 +184,7 @@
 
             }).on("mouseout", function (d) {
               clearPath(d);
-              paintPath();
+              paintPathToRoot();
             });
 
           node.on("dblclick.zoom", function (d) {
@@ -165,10 +193,11 @@
             var dcy = (height / 2 - d.y * zoom.scale());
             zoom.translate([dcx, dcy]);
             g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + zoom.scale() + ")");
+            markInFocusNodes(g);
           });
 
 
-          function paintPath() {
+          function paintPathToRoot() {
             d3.selectAll(".rect")
               .style("stroke", function (d) {
                 return d.pathToParent ? "red" : "black"
@@ -188,27 +217,75 @@
           }
 
 
-          function highlightPath(d) {
+          function highlightPathToRoot(d) {
             d.pathToParent = true;
             if (d.parent) {
-              highlightPath(d.parent)
+              highlightPathToRoot(d.parent)
             }
           }
 
 
-          zoom.on("zoom", function() {
+          zoom.on("zoom", function () {
             g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+            markInFocusNodes(g);
+
+
           });
 
 
         }
 
-        function color(d) {
-          return d.children && d.children.length > 0 ? "#3182bd" : "#fd8d3c";
+        function markInFocusNodes(g) {
+          var gTransform = d3.transform(g.attr("transform"));
+
+          var gx = gTransform.translate[0];
+          var gy = gTransform.translate[1];
+          var gScale = gTransform.scale[0];
+
+          node.each(function (d) {
+            var realX = (gx / gScale) + d.x;
+            var realY = (gy / gScale) + d.y;
+            d.inFocus = hitTest_roomRec(realX, realY, gScale);
+          });
+
+          node
+            .style("opacity", function (d) {
+              return d.inFocus ? 1 : 0;
+            })
         }
 
+        function hitTest_roomRec(realX, realY, gScale) {
+          var zoomRectX = Number(zoomRect.attr("x")),
+            zoomRectWidth = Number(zoomRect.attr("width")),
+            zoomRectY = Number(zoomRect.attr("y")),
+            zoomRectHeight = Number(zoomRect.attr("height"));
+
+          return (realX >= zoomRectX / gScale && realX <= (zoomRectX + zoomRectWidth) / gScale)
+            && (realY >= zoomRectY / gScale && realY <= (zoomRectY + zoomRectHeight) / gScale)
+            ;
+        }
+
+
+        function fillNodeColor(d) {
+          var colors = {
+            "20": "#66CC33",
+            "15": "#66CC33",
+            "10": "#66CC33",
+            "5": "#66CC33",
+            "0": "#DC0D26",
+            "-1": "#DAB426",
+            "-2": "#DAB426",
+            "-3": "#DAB426",
+            "-4": "#DAB426"
+          };
+          return colors[d.status] || "#ffffff";
+        }
+
+
         function tick(e) {
-/*
+
+
+
 
           // Push sources up and targets down to form a weak tree.
           var k = 5 * e.alpha;
@@ -234,70 +311,38 @@
 
           node
             .attr("transform", function (d) {
-              return "translate(" + (d.x) + "," + (d.y) + ")";
+              return "translate(" + (d.x - (this.getBBox().width /2)) + "," + (d.y) + ")";
+            });
+
+
+          _link.attr("x1", function (d) {
+            return d.source.x;
+          })
+            .attr("y1", function (d) {
+              return d.source.y;
             })
-
-*/
-
-
-          // Apply the constraints:
-          //
-          force.nodes().forEach(function(d) {
-            if (!d.fixed) {
-              var r = d.width * 10, dx, dy, ly = 30;
-
-              // #1: constraint all nodes to the visible screen:
-              //d.x = Math.min(width - r, Math.max(r, d.x));
-              //d.y = Math.min(height - r, Math.max(r, d.y));
-
-              // #1.0: hierarchy: same level nodes have to remain with a 1 LY band vertically:
-              if (d.children || d._children) {
-                var py = 0;
-                if (d.parent) {
-                  py = d.parent.y;
-                }
-                d.py = d.y = py +  ly/2;
-              }
-
-              // #1a: constraint all nodes to the visible screen: links
-              dx = Math.min(0, width - r - d.x) + Math.max(0, r - d.x);
-              dy = Math.min(0, height - r - d.y) + Math.max(0, r - d.y);
-              d.x += 2 * Math.max(-ly, Math.min(ly, dx));
-              d.y += 2 * Math.max(-ly, Math.min(ly, dy));
-              // #1b: constraint all nodes to the visible screen: charges ('repulse')
-              dx = Math.min(0, width - r - d.px) + Math.max(0, r - d.px);
-              dy = Math.min(0, height - r - d.py) + Math.max(0, r - d.py);
-              d.px += 2 * Math.max(-ly, Math.min(ly, dx));
-              d.py += 2 * Math.max(-ly, Math.min(ly, dy));
-
-              // #2: hierarchy means childs must be BELOW parents in Y direction:
-              if (d.parent) {
-                d.y = Math.max(d.y, d.parent.y + ly);
-                d.py = Math.max(d.py, d.parent.py + ly);
-              }
-            }
-          });
-
-
-          _link.attr("x1", function(d) { return d.source.x; })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return d.target.x; })
-            .attr("y2", function(d) { return d.target.y; });
-
-          node
-            .attr("transform", function (d) {
-              return "translate(" + (d.x - (d.width /2)) + "," + (d.y) + ")";
+            .attr("x2", function (d) {
+              return d.target.x;
             })
+            .attr("y2", function (d) {
+              return d.target.y;
+            });
+
+
+          markInFocusNodes(g);
 
 
         }
 
 
-
         svg.call(zoom);
+
 
         function flatten(root) {
           var nodes = [], i = 0;
+          root.fixed = true;
+          root.x = width / 2;
+          root.y = height / 2;
 
           function recurse(node, depth, parent) {
 
@@ -312,7 +357,9 @@
             node.depth = depth;
             nodes.push(node);
           }
-          recurse(root,1);
+
+
+          recurse(root, 1);
 
           return nodes;
         }
