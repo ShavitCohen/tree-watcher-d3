@@ -1,0 +1,15 @@
+.component-wrapper,
+.component-holder {
+  height: 100%;
+  width: 100%;
+}
+.component-header {
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAATCAYAAABRC2cZAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAZdEVYdFNvZnR3YXJlAEFkb2JlIEltYWdlUmVhZHlxyWU8AAAAQElEQVQYV2OYvubAf4YTd97/Z2JnYWJg+vf/P5D4x8DA9BfE+vsPTvwFEn9ArD8gFlgMzAVLIKmDGcD8jkWqAQCOkDL5xgukSAAAAABJRU5ErkJggg==") repeat scroll 0 0 #b8d1ee;
+  height: 18px;
+}
+.component-button {
+  cursor: pointer;
+}
+.component-body {
+  height: calc(100% - 18px);
+}

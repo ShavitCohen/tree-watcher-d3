@@ -1,0 +1,15 @@
+<div class="tooltip" ng-show="showTooltip" ng-style="{'left': pos.x, 'top': pos.y}">
+    <table class="tooltip-table">
+        <tr>
+            <td colspan="2">
+                <center ng-style="{'background': node.data.hexColor}" class="tooltip-header">Details - {{node.name}}</center>
+            </td>
+        </tr>
+        <tr ng-repeat="kpi in node.data._kpis">
+            <td class="label">
+                <b>{{kpi.label}}:</b>
+            </td>
+            <td class="value">{{kpi.status}}</td>
+        </tr>
+    </table>
+</div>

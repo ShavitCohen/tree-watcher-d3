@@ -1,0 +1,6 @@
+<div ng-click="showCompList = !showCompList">
+    <span ng-show="!showCompList">Add Component</span>
+    <div ng-show="showCompList">
+        <div class="cell-action" ng-click="addComponent(comp.id)" ng-repeat="comp in components"> {{comp.name}} </div>
+    </div>
+</div>

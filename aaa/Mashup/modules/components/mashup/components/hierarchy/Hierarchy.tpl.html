@@ -1,0 +1,35 @@
+<div class="hierarchy-table-wrapper">
+    <table class="hierarchy-table">
+        <tr class="table-row">
+            <th class="table-header" rowspan="2"> Name </th>
+            <th class="table-header" rowspan="2"> Status </th>
+            <th class="table-header" rowspan="2"> Acknowledge </th>
+            <th class="table-header" colspan="2">
+                <div class="expand-collapse-button vert-align-middle" ng-click="showHideColumns()"> {{hideSubColumns ? '+' : '-'}} </div> 
+                <span> Application </span>
+            </th>
+            <th class="table-header" rowspan="2"> Last Status Change </th>
+        </tr>
+        <tr class="table-row">
+            <th class="table-header" ng-hide="hideSubColumns"> Application Performance </th>
+            <th class="table-header" ng-hide="hideSubColumns"> Application Availability </th>
+        </tr>
+        <tr class="table-row" ng-repeat="row in allData track by $index" ng-click="row.selected = !row.selected" ng-class="{'selected' : row.selected}">
+            <td class="table-cell name" ng-class="{'no-children' : !row.children}">
+                <div ng-style="{'padding-left': row.nesting * nestingShift + 'px'}">
+                    <div class="expand-collapse-button" ng-show="row.children" ng-click="expandCollapseRow($event, $index, row)"> {{row.expanded ? '-' : '+'}} </div>
+                    <div class="item-name"> {{row.name}} </div>
+                </div>
+                <div class="details">
+                    details
+                </div>
+            </td>
+            <td class="table-cell">{{row.name}}</td>
+            <td class="table-cell">{{row.name}}</td>
+            <td class="table-cell">{{row.name}}</td>
+            <td class="table-cell">{{row.name}}</td>
+            <td class="table-cell">{{row.name}}</td>
+        </tr>
+
+    </table>
+</div>

@@ -1,0 +1,4 @@
+<li ng-repeat="node in nodes track by $index" class="single-node">
+    <a href="#" ng-click="hideShowChildren(node)" class="node-name">{{node.name}}</a>
+    <ul ng-if="node.children" class="html-graph-node" nodes="node.children" ng-show="node.showChildren"></ul>
+</li>

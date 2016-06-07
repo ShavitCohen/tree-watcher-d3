@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" ng-app="App">
+
+<head>
+<!-- @if NODE_ENV='prod' -->
+    <link rel="stylesheet" type="text/css" href="prod/main.css">
+<!-- @endif -->
+
+<!-- @if NODE_ENV='dev' -->
+    <!-- @echo includedCss -->
+<!-- @endif -->
+
+</head>
+
+<body ng-controller="MainCtrl"> 
+    <div mashup></div>
+</body>
+
+<!-- @if NODE_ENV='prod' -->
+    <script src="prod/main.js"></script> 
+<!-- @endif -->
+
+<!-- @if NODE_ENV='dev' -->
+    <!-- @echo includedScripts -->
+<!-- @endif -->
+
+</html>

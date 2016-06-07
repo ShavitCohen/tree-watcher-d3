@@ -1,0 +1,33 @@
+{
+    "items": [{
+        "name": "Stub item 1",
+        "submenues": [{
+            "name": "Stub item 1.1",
+            "submenues": [{
+                "name": "Stub item 1.1.1"
+            }]
+        },{
+            "name": "Stub item 1.2",
+            "submenues": [{
+                "name": "Stub item 1.2.1"
+            }]
+        }]
+    }, {
+        "name": "Stub item 2"
+    },{
+        "name": "Go to",
+        "submenues": [{
+            "name": "RGraph",
+            "action": "link",
+            "href": "r-graph"
+        },{
+            "name": "Space Tree",
+            "action": "link",
+            "href": "space-tree"
+        },{
+            "name": "Hypertree",
+            "action": "link",
+            "href": "hyper-tree"
+        }]
+    }]
+}

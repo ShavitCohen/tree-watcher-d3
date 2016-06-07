@@ -1,0 +1,218 @@
+{
+  "id": "1",
+  "status": 0,
+  "name": "End User Monitors",
+  "children": [
+    {
+      "id": "1aaa",
+      "name": "random",
+      "status": -2,
+      "children": [
+        {
+          "id": "1;;e7bab76f29122a35ed94a2fd8ec0002c;;2e33acc2ec3441673df9b756f688f6ad",
+          "name": "random_status",
+          "status": -2,
+          "children": [
+            {
+              "id": "1aaae3dewer",
+              "name": "tx_random",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "89893890230238",
+      "name": "testing",
+      "classification": null,
+      "status": 20,
+      "children": [
+        {
+          "id": "9023849082304238023480808",
+          "name": "tx_ok",
+          "status": 20,
+          "children": [
+            {
+              "id": "012380123808",
+              "name": "ok",
+              "status": 20,
+              "children": [
+              ]
+            }
+          ]
+        },
+        {
+          "id": "432984723",
+          "name": "RYG",
+          "status": 0,
+          "children": [
+            {
+              "id": "394729",
+              "name": "aR_Y_G",
+              "status": 0,
+              "children": [
+
+                {
+                  "id": "999898",
+                  "name": "Red",
+                  "status": 0,
+                  "children": [
+                  ]
+                },
+                {
+                  "id": "01",
+                  "name": "aYellow",
+                  "status": 0,
+                  "children": [
+                    {
+                      "id": "00203948",
+                      "name": "Green",
+                      "status": 20,
+                      "children": [
+                        {
+                          "id": "00202222223948",
+                          "name": "Green1",
+                          "status": 20,
+                          "children": [
+                          ]
+                        },
+                        {
+                          "id": "99989833333333444",
+                          "name": "Red3",
+                          "status": 0,
+                          "children": [
+                          ]
+                        },
+                        {
+                          "id": "02",
+                          "name": "Yellow3",
+                          "status": 0,
+                          "children": [
+                            {
+                              "id": "002031211121211212948",
+                              "name": "Gr313131een",
+                              "status": 20,
+                              "children": [
+                              ]
+                            },
+                            {
+                              "id": "999893213123123128",
+                              "name": "R2222ed",
+                              "status": 0,
+                              "children": [
+                              ]
+                            },
+                            {
+                              "id": "04",
+                              "name": "Yellow2223ssss",
+                              "status": 10,
+                              "children": []
+                            },
+                            {
+                              "id": "1aaaaa1",
+                              "name": "111ddd11",
+                              "status": 10,
+                              "children": [
+                                {
+                                  "id": "1002031211121211212948",
+                                  "name": "ssssGr313131een",
+                                  "status": 20,
+                                  "children": [
+                                  ]
+                                },
+                                {
+                                  "id": "3999893213123123128",
+                                  "name": "ssssR2222ed",
+                                  "status": 0,
+                                  "children": [
+                                  ]
+                                },
+                                {
+                                  "id": "404",
+                                  "name": "sssss",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "11",
+                                  "name": "11111",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "afsdf",
+                                  "name": "3242423",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "dddfsdfsdfsd",
+                                  "name": "342342342342314324123",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "11fsdfsdf4",
+                                  "name": "11dsfs3123123123df4111",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "11fsdaaafaaaasdfsdf5111111",
+                                  "name": "15",
+                                  "status": 10,
+                                  "children": []
+                                },
+                                {
+                                  "id": "11fasdfasfa2347",
+                                  "name": "17111111231312312312",
+                                  "status": 10,
+                                  "children": []
+                                }
+                              ]
+                            },
+                            {
+                              "id": "112",
+                              "name": "121111",
+                              "status": 10,
+                              "children": []
+                            },
+                            {
+                              "id": "113",
+                              "name": "1",
+                              "status": 10,
+                              "children": []
+                            },
+                            {
+                              "id": "114",
+                              "name": "11dsfsdf4111",
+                              "status": 10,
+                              "children": []
+                            },
+                            {
+                              "id": "122215",
+                              "name": "1511232311",
+                              "status": 10,
+                              "children": []
+                            },
+                            {
+                              "id": "117",
+                              "name": "171111",
+                              "status": 10,
+                              "children": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

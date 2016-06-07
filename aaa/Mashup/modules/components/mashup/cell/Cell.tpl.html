@@ -1,0 +1,21 @@
+<div ng-style="{
+        'top': data.pos.top, 
+        'left': data.pos.left,
+        'height': data.pxSize.height,
+        'width': data.pxSize.width
+    }">
+    <div ng-show="!data.component">
+        <div class="cell-action" ng-click="showSplit = !showSplit">
+            <span ng-show="!showSplit"> Split </span>
+            <div ng-show="showSplit">
+                <div ng-click="split('vertical')">Vertical</div>
+                <div ng-click="split('horizontal')">Horizontal</div>
+            </div>
+        </div>
+
+        <div class="cell-action" ng-click="remove()"> Remove </div>
+        <div class="cell-action component-selector"></div>
+    </div>
+    <div ng-show="data.component" class="component-wrapper" component-name="data.component" cell-index="index"></div>
+    <div class="marker"></div>
+</div>

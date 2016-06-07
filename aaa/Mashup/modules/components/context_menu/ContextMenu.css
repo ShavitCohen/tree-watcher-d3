@@ -1,0 +1,40 @@
+.context-menu {
+  background: white;
+  border-color: #3f658c;
+  border-style: solid;
+  border-width: 1px 2px 2px 1px;
+  font-family: Arial,Verdana;
+  font-size: 11px;
+  min-width: 100px;
+  position: absolute;
+  top: -1px;
+}
+.context-menu-item {
+  cursor: pointer;
+  height: 19px;
+  line-height: 19px;
+  padding: 0 0 0 10px;
+  white-space: nowrap;
+}
+.context-menu-item:hover {
+  background: #ecf1f6;
+  background: -moz-linear-gradient(top, #ecf1f6 0%, #bbc9d6 100%);
+  background: -webkit-linear-gradient(top, #ecf1f6 0%, #bbc9d6 100%);
+  background: linear-gradient(to bottom, #ecf1f6 0%, #bbc9d6 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ecf1f6', endColorstr='#bbc9d6', GradientType=0);
+}
+.context-item-text {
+  padding: 0 12px 0 0;
+}
+.has-sub-menu {
+  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAJCAMAAAAmRK2vAAAABGdBTUEAANbY1E9YMgAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAAGUExURQICAv///zjYpT0AAAACdFJOU/8A5bcwSgAAADlJREFUeNpiYAQDgABiYGQAUQABBKRANEAAgSggDRBAYIqBESCAoDyAAILKAQQQVCVAADFA9AEEGAAE4gAnLB8ULAAAAABJRU5ErkJggg==") no-repeat right 2px center;
+}
+.context-item-text {
+  padding: 0 20px 0 0;
+}
+.context-menu-item .context-menu {
+  display: none;
+}
+.context-menu-item:hover > .context-menu {
+  display: block;
+}

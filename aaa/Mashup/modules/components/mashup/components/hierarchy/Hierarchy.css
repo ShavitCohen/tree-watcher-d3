@@ -1,0 +1,77 @@
+.hierarchy .table-holder {
+  background: red;
+  height: 100px;
+  margin: 6px;
+  width: calc(100% - 32px);
+}
+.hierarchy-table {
+  font-size: 12px;
+  width: 100%;
+}
+.hierarchy-table,
+.hierarchy-table .table-header {
+  border: 1px solid;
+  border-collapse: collapse;
+  position: relative;
+}
+.hierarchy-table .table-row {
+  position: relative;
+}
+.hierarchy-table .table-cell {
+  border-left: 1px solid;
+  border-right: 1px solid;
+  border-collapse: collapse;
+}
+.hierarchy-table .table-header {
+  background: rgba(0, 0, 0, 0) url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAA1CAIAAAAPnBZlAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACBSURBVBhXncOHFYMgAEDBv/9e6dXYuyIgWGOyQJgh994xrt+/2uWDnTfMtNGPb7SrhhVpVzqzINy2n2n0RK0mKjlSukU3kIuBTFjS1pI0hrg2RFXvasJSExQKP1e8comXSZ5pxyPpuCeCWyy4Ri2XsOHsnoKao19zeFXsvYqdV/4A+seNUBYVxsQAAAAASUVORK5CYII=") repeat scroll 0 0 / contain padding-box;
+}
+.hierarchy-table .table-row:nth-child(n + 3) {
+  font-size: 16px;
+  height: 40px;
+  line-height: 40px;
+  vertical-align: top;
+}
+.hierarchy-table .table-row.selected {
+  height: 80px;
+}
+.hierarchy-table .table-row:nth-last-child(odd) .table-cell {
+  background: #f8f9fb padding-box;
+}
+.hierarchy-table .table-row:nth-last-child(even) .table-cell {
+  background: #eaeff3 padding-box;
+}
+.hierarchy-table .table-row:hover .table-cell {
+  background: #d2dce8 padding-box;
+}
+.hierarchy-table .name.no-children .item-name {
+  margin: 0 0 0 20px;
+}
+.hierarchy-table .expand-collapse-button {
+  border: 1px solid;
+  cursor: pointer;
+  height: 10px;
+  left: 5px;
+  line-height: 10px;
+  text-align: center;
+  width: 10px;
+}
+.hierarchy-table .name .item-name,
+.hierarchy-table .name .expand-collapse-button {
+  display: inline-block;
+  vertical-align: middle;
+}
+.hierarchy-table .name .expand-collapse-button {
+  margin: 0 0 0 5px;
+}
+.hierarchy-table .details {
+  bottom: 0;
+  display: none;
+  left: 0;
+  padding: 0 20px 0 0;
+  position: absolute;
+  right: 0;
+  text-align: right;
+}
+.hierarchy-table .selected .details {
+  display: block;
+}
