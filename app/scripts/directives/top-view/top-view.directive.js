@@ -49,9 +49,8 @@
 
         var viewWindow = setViewWindow(svg, width, height);
         var zoom = setZoom();
-
         var graph_g = svg.append("g");
-        //svg.style("cursor", "move");
+        setInitialZoom(graph_g, zoom, viewWindow, NODE_HEIGHT);
 
         var allLinks = graph_g.selectAll(".link"),
           allNodes = graph_g.selectAll(".node");
@@ -148,6 +147,8 @@
               markInFocusNodes(graph_g);
             }
           });
+
+
         }
 
         function markInFocusNodes(g) {
@@ -167,6 +168,12 @@
             .style("opacity", function (d) {
               return d.inFocus ? 1 : 0;
             })
+        }
+
+        function setInitialZoom(graph_g, zoom, viewWindow, nodeHeight) {
+          var yTransform = Number(viewWindow.attr("y")) + nodeHeight;
+          zoom.translate([0, yTransform]);
+          graph_g.attr("transform", "translate(" + 0 + "," + yTransform + ")");
         }
 
         function hitTest_roomRec(realX, realY, gScale) {
