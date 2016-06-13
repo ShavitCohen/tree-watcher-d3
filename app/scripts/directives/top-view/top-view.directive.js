@@ -38,7 +38,7 @@
           GRAVITY = 0.1,
           CHARGE = -500,
           FRICTION = 0.7,
-          ROOT_TO_CHILD_LINK_DISTANCE = 150,
+          ROOT_TO_CHILD_LINK_DISTANCE = 100,
           NODE_TO_NODE_WITH_CHILDREN_DISTANCE = 100,
           NODE_TO_EMPTY_NODE_LINK_DISTANCE = 25;
 
@@ -50,6 +50,8 @@
         var viewWindow = setViewWindow(svg, width, height);
         var zoom = setZoom();
         var graph_g = svg.append("g");
+
+
         setInitialZoom(graph_g, zoom, viewWindow, GRAVITY_TOP_POSITION, NODE_HEIGHT);
 
         var allLinks = graph_g.selectAll(".link"),
@@ -108,6 +110,7 @@
           })
             .enter()
             .append("g")
+            .attr("class", "node-group")
             .attr("transform", function (d) {
               return "translate(" + d.x + "," + d.y + ")";
             })
@@ -165,8 +168,8 @@
           });
 
           allNodes
-            .style("opacity", function (d) {
-              return d.inFocus ? 1 : 0;
+            .classed("in-focus", function (d) {
+              return d.inFocus ? true : false;
             })
         }
 
@@ -187,9 +190,7 @@
             ;
         }
 
-
-        function tick(e) {
-
+        function noTreeView(e, allLinks, allNodes) {
           allLinks.attr("x1", function (d) {
             return d.source.x;
           })
@@ -209,6 +210,59 @@
 
           markInFocusNodes(graph_g);
         }
+
+
+        function treeView(e, allLinks, allNodes) {
+          // Apply the constraints:
+          //
+
+          var dx, dy, ly = 30,r = 40;
+          allNodes.forEach(function(d) {
+            if (!d.fixed) {
+              if (d.children) {
+                var py = 0;
+                if (d.parent) {
+                  py = d.parent.y;
+                }
+                d.py = d.y = py + d.depth * d.width;
+              }
+
+              // #1a: constraint all nodes to the visible screen: links
+              dx = Math.min(0, width - r - d.x) + Math.max(0, r - d.x);
+              dy = Math.min(0, height - r - d.y) + Math.max(0, r - d.y);
+              d.x += 2 * Math.max(-ly, Math.min(ly, dx));
+              d.y += 2 * Math.max(-ly, Math.min(ly, dy));
+              // #1b: constraint all nodes to the visible screen: charges ('repulse')
+              dx = Math.min(0, width - r - d.px) + Math.max(0, r - d.px);
+              dy = Math.min(0, height - r - d.py) + Math.max(0, r - d.py);
+              d.px += 2 * Math.max(-ly, Math.min(ly, dx));
+              d.py += 2 * Math.max(-ly, Math.min(ly, dy));
+
+              // #2: hierarchy means childs must be BELOW parents in Y direction:
+              if (d.parent) {
+                d.y = Math.max(d.y, d.parent.y + ly);
+                d.py = Math.max(d.py, d.parent.py + ly);
+              }
+            }
+          });
+
+
+          allLinks.attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
+
+          allNodes.attr("x", function(d) { return d.x; })
+            .attr("y", function(d) { return d.y; });
+        }
+
+
+        function tick(e) {
+          noTreeView(e,allLinks,allNodes);
+          //treeView(e, allLinks, allNodes);
+        }
+
+
 
         svg.call(zoom);
       }
@@ -252,11 +306,12 @@
       // Exit any old nodes.
       function paintNodes(allNodes, nodeHeight) {
         //first we creates the nodes in order to capture their width
+        var _WIDTH_ADDITION_TO_RECT = 50;
         var text = allNodes.append("text")
           .text(function (d) {
             return d.name;
           })
-          .attr("x", 50)
+          .attr("x", _WIDTH_ADDITION_TO_RECT)
           .style("font-size", "10px")
           .each(function (d) {
             d.width = this.getBBox().width;
@@ -269,7 +324,7 @@
           .append("rect")
           .attr("class", "rect")
           .attr("width", function (d) {
-            return d.width + 50;
+            return d.width + _WIDTH_ADDITION_TO_RECT;
           })
           .attr("height", nodeHeight)
           .style("fill", function (d) {
@@ -278,12 +333,24 @@
           .style("stroke", "black")
           .style("stroke-width", "1px");
 
+        var circle = allNodes
+          .append("circle")
+          .attr("class", "node-circle")
+          .attr("r", nodeHeight / 4)
+          .attr("cx", function (d) {
+            return (d.width + _WIDTH_ADDITION_TO_RECT) / 2;
+          })
+          .style("fill", function (d) {
+            return setColorByStatus(d.status);
+          })
+          .style("stroke", "black");
 
         //then we add the mouse over event
         allNodes.append("text")
           .text(function (d) {
             return d.name;
           })
+          .attr("class", "rect-text")
           .style("font-size", "10px")
           .attr("x", 10)
           .attr("y", 10);
@@ -319,7 +386,7 @@
       }
 
       function setZoom() {
-        var min_zoom = 0.1;
+        var min_zoom = 0.08;
         var max_zoom = 7;
         return d3.behavior.zoom().scaleExtent([min_zoom, max_zoom]);
       }
@@ -373,8 +440,6 @@
           }
         }
       }
-
-
     }
   }
 
