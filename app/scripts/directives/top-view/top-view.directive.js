@@ -50,7 +50,7 @@
         var viewWindow = setViewWindow(svg, width, height);
         var zoom = setZoom();
         var graph_g = svg.append("g");
-        setInitialZoom(graph_g, zoom, viewWindow, NODE_HEIGHT);
+        setInitialZoom(graph_g, zoom, viewWindow, GRAVITY_TOP_POSITION, NODE_HEIGHT);
 
         var allLinks = graph_g.selectAll(".link"),
           allNodes = graph_g.selectAll(".node");
@@ -170,8 +170,8 @@
             })
         }
 
-        function setInitialZoom(graph_g, zoom, viewWindow, nodeHeight) {
-          var yTransform = Number(viewWindow.attr("y")) + nodeHeight;
+        function setInitialZoom(graph_g, zoom, viewWindow, rootY, nodeHeight) {
+          var yTransform = Number(viewWindow.attr("y")) + nodeHeight + (-1 * rootY);
           zoom.translate([0, yTransform]);
           graph_g.attr("transform", "translate(" + 0 + "," + yTransform + ")");
         }
@@ -189,14 +189,6 @@
 
 
         function tick(e) {
-
-          // Push sources up and targets down to form a weak tree.
-          /*var alpha = e.alpha;
-           var kx = -0.2 * alpha, ky = 1 * alpha;
-           links.forEach(function(d, i) {
-           d.target.x += (d.source.x - d.target.x) * kx;
-           d.target.y += (d.source.y + 50 - d.target.y) * ky;
-           });*/
 
           allLinks.attr("x1", function (d) {
             return d.source.x;
