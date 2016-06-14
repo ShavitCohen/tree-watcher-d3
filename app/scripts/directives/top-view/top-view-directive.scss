@@ -1,0 +1,40 @@
+.top-view {
+  .node-group * {
+    -webkit-transition: all 200ms ease;
+    -moz-transition: all 200ms ease;
+    -ms-transition: all 200ms ease;
+    -o-transition: all 200ms ease;
+    transition: all 200ms ease;
+  }
+
+  .node-group {
+    .rect, .rect-text {
+      opacity: 0;
+    }
+
+    .node-circle {
+      opacity: 1;
+    }
+
+    &.in-focus {
+      .rect, .rect-text {
+        opacity: 1;
+      }
+      .node-circle {
+        opacity: 0;
+      }
+    }
+  }
+
+  .node {
+    cursor: pointer;
+    stroke: #3182bd;
+    stroke-width: 1.5px;
+  }
+
+  .link {
+    fill: none;
+    stroke: #9ecae1;
+    stroke-width: 1.5px;
+  }
+}

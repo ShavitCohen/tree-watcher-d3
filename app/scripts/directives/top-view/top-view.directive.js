@@ -24,6 +24,7 @@
       init();
 
       function init() {
+        angular.element(elm).addClass("top-view");
         scope.$watch("data", function (val, old) {
           if (val) {
             renderGraph(val, scope.width, scope.height);
@@ -47,75 +48,97 @@
           .attr("width", width)
           .attr("height", height);
 
-        var viewWindow = setViewWindow(svg, width, height);
-        var zoom = setZoom();
-        var graph_g = svg.append("g");
+        /** Setting view window **/
+        var svgWidth = Number(svg.attr("width"));
+        var svgHeight = Number(svg.attr("height"));
+        var VIEW_WINDOW_WIDTH = svgWidth - (svgWidth / 3);
+        var VIEW_WINDOW_HEIGHT = svgHeight - (svgHeight / 3);
+        var viewWindow = setViewWindow(svg, VIEW_WINDOW_WIDTH, VIEW_WINDOW_HEIGHT);
+        /** End Setting view window **/
 
+
+        var graph_g = svg.append("g");
+        var zoom = setZoom(graph_g);
 
         setInitialZoom(graph_g, zoom, viewWindow, GRAVITY_TOP_POSITION, NODE_HEIGHT);
 
         var allLinks = graph_g.selectAll(".link"),
           allNodes = graph_g.selectAll(".node");
 
-        var flattenedNodes = flattenTreeToNodesArray(data, width / 2, GRAVITY_TOP_POSITION);
-        var nodesData = arrangeNodesAsTree(flattenedNodes, width, height),
-          linksData = d3.layout.tree().links(nodesData);
+        var force = d3.layout.force()
+          .on("tick", tick);
+
+        var tree = d3.layout.tree();
+
 
         update();
+        layouts.force(force);
 
-        function update() {
+        setTimeout(function () {
+          layouts.tree(force, tree, 1000, allNodes, allLinks, diagonal);
+        }, 5000);
 
-          var force = d3.layout.force()
+
+        function updateForceBehaviour(force, nodesData, linksData) {
+          force
+            .nodes(nodesData)
+            .links(linksData)
             .size([width, height])
             .gravity(GRAVITY)
             .charge(CHARGE)
             .friction(FRICTION)
-            .on("tick", tick)
-            .nodes(nodesData)
-            .links(linksData)
             .linkDistance(function (d) {
               if (!d.source.parent) {
                 return ROOT_TO_CHILD_LINK_DISTANCE
               }
-              return d.target.children.length > 0 ? NODE_TO_NODE_WITH_CHILDREN_DISTANCE : NODE_TO_EMPTY_NODE_LINK_DISTANCE;
+              return d.target.children && d.target.children.length > 0 ? NODE_TO_NODE_WITH_CHILDREN_DISTANCE : NODE_TO_EMPTY_NODE_LINK_DISTANCE;
             })
-            .start();
+        }
+
+
+        var diagonal = d3.svg.diagonal()
+          .projection(function (d) {
+            return [d.x, d.y];
+          });
+        var flattenedNodes,nodesData;
+
+        function update() {
+
+          flattenedNodes = flattenTreeToNodesArray(data, width / 2, GRAVITY_TOP_POSITION);
+          nodesData = flattenedNodes,//arrangeNodesAsTree(flattenedNodes, width, height),
+            linksData = d3.layout.tree().links(nodesData);
+
+          updateForceBehaviour(force, nodesData, linksData);
+
+          tree
+            .size([width, height]);
+
 
           // Update the links…
           allLinks = allLinks.data(linksData, function (d) {
             return d.target.id;
           });
+
           allLinks.exit().remove();
 
 
           // Enter any new links.
-          allLinks.enter().insert("line")
+          allLinks.enter()
+            .append("path")
             .attr("class", "link")
-            .attr("x1", function (d) {
-              return d.source.x;
-            })
-            .attr("y1", function (d) {
-              return d.source.y;
-            })
-            .attr("x2", function (d) {
-              return d.target.x;
-            })
-            .attr("y2", function (d) {
-              return d.target.y;
-            });
+            .attr("d", diagonal);
 
           // Update the nodes…
           allNodes = allNodes.data(nodesData, function (d) {
             return d.id;
-          })
+          });
+          allNodes.exit().remove();
+
+          allNodes
             .enter()
             .append("g")
             .attr("class", "node-group")
-            .attr("transform", function (d) {
-              return "translate(" + d.x + "," + d.y + ")";
-            })
             .call(force.drag);
-
 
           allNodes = paintNodes(allNodes, NODE_HEIGHT);
 
@@ -138,20 +161,34 @@
                 graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + zoom.scale() + ")");
                 markInFocusNodes(graph_g);
               },
-              'mousedown.drag': function (d) {
-                return null;
+              'click': function (d) {
+                if (d3.event.defaultPrevented) return; // ignore drag
+                if (d.children) {
+                  d._children = d.children;
+                  d.children = null;
+                } else {
+                  d.children = d._children;
+                  d._children = null;
+                }
+                update();
               }
             }
           );
 
-          zoom = setEvents(zoom, {
+          arrangeElements();
+
+        }
+
+        function setZoom(graph_g) {
+          var min_zoom = 0.08;
+          var max_zoom = 7;
+          var zoom = d3.behavior.zoom().scaleExtent([min_zoom, max_zoom]);
+          return setEvents(zoom, {
             'zoom': function (d) {
               graph_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
               markInFocusNodes(graph_g);
             }
           });
-
-
         }
 
         function markInFocusNodes(g) {
@@ -190,10 +227,11 @@
             ;
         }
 
-        function noTreeView(e, allLinks, allNodes) {
-          allLinks.attr("x1", function (d) {
-            return d.source.x;
-          })
+        function arrangeElements() {
+          allLinks
+            .attr("x1", function (d) {
+              return d.source.x;
+            })
             .attr("y1", function (d) {
               return d.source.y;
             })
@@ -202,66 +240,21 @@
             })
             .attr("y2", function (d) {
               return d.target.y;
-            });
+            })
+            .attr("d", diagonal);
+
           allNodes
             .attr("transform", function (d) {
+
               return "translate(" + (d.x - (this.getBBox().width / 2)) + "," + (d.y) + ")";
             });
-
           markInFocusNodes(graph_g);
         }
 
 
-        function treeView(e, allLinks, allNodes) {
-          // Apply the constraints:
-          //
-
-          var dx, dy, ly = 30,r = 40;
-          allNodes.forEach(function(d) {
-            if (!d.fixed) {
-              if (d.children) {
-                var py = 0;
-                if (d.parent) {
-                  py = d.parent.y;
-                }
-                d.py = d.y = py + d.depth * d.width;
-              }
-
-              // #1a: constraint all nodes to the visible screen: links
-              dx = Math.min(0, width - r - d.x) + Math.max(0, r - d.x);
-              dy = Math.min(0, height - r - d.y) + Math.max(0, r - d.y);
-              d.x += 2 * Math.max(-ly, Math.min(ly, dx));
-              d.y += 2 * Math.max(-ly, Math.min(ly, dy));
-              // #1b: constraint all nodes to the visible screen: charges ('repulse')
-              dx = Math.min(0, width - r - d.px) + Math.max(0, r - d.px);
-              dy = Math.min(0, height - r - d.py) + Math.max(0, r - d.py);
-              d.px += 2 * Math.max(-ly, Math.min(ly, dx));
-              d.py += 2 * Math.max(-ly, Math.min(ly, dy));
-
-              // #2: hierarchy means childs must be BELOW parents in Y direction:
-              if (d.parent) {
-                d.y = Math.max(d.y, d.parent.y + ly);
-                d.py = Math.max(d.py, d.parent.py + ly);
-              }
-            }
-          });
-
-
-          allLinks.attr("x1", function(d) { return d.source.x; })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return d.target.x; })
-            .attr("y2", function(d) { return d.target.y; });
-
-          allNodes.attr("x", function(d) { return d.x; })
-            .attr("y", function(d) { return d.y; });
-        }
-
-
         function tick(e) {
-          noTreeView(e,allLinks,allNodes);
-          //treeView(e, allLinks, allNodes);
+          arrangeElements();
         }
-
 
 
         svg.call(zoom);
@@ -293,16 +286,6 @@
       }
 
 
-      function arrangeNodesAsTree(nodesData, width, height) {
-        nodesData.forEach(function (d, i) {
-          if (!d.fixed) {
-            d.x = width / 2 + i;
-            d.y = height / 2 + 100 * d.depth;
-          }
-        });
-        return nodesData;
-      }
-
       // Exit any old nodes.
       function paintNodes(allNodes, nodeHeight) {
         //first we creates the nodes in order to capture their width
@@ -315,7 +298,12 @@
           .style("font-size", "10px")
           .each(function (d) {
             d.width = this.getBBox().width;
-            this.remove();
+            try {
+              this.remove();
+            } catch (ex) {
+              this.parentNode.removeChild(this);
+            }
+
           });
 
 
@@ -355,6 +343,7 @@
           .attr("x", 10)
           .attr("y", 10);
 
+
         return allNodes;
       }
 
@@ -367,29 +356,30 @@
       }
 
 
-      function setViewWindow(svg, svgWidth, svgHeight) {
-        var VIEW_WINDOW_WIDTH = svgWidth - (svgWidth / 3);
-        var VIEW_WINDOW_HEIGHT = svgHeight - (svgHeight / 3);
+      function setViewWindow(svg, width, height) {
 
-        return svg.append("rect")
+        var viewWindow = svg.append("rect")
           .attr("class", "viewWindow")
-          .attr("width", VIEW_WINDOW_WIDTH)
-          .attr("height", VIEW_WINDOW_HEIGHT)
           .style("stroke", "gray")
           .style("stroke-opacity", 0.2)
           .style("stroke-width", "1px")
-          .style("fill-opacity", 0)
-          .attr("ry", VIEW_WINDOW_WIDTH / 3)
-          .attr("ry", VIEW_WINDOW_HEIGHT / 3)
-          .attr("x", (svgWidth / 2 - VIEW_WINDOW_WIDTH / 2))
-          .attr("y", (svgHeight / 2 - VIEW_WINDOW_HEIGHT / 2))
+          .style("fill-opacity", 0);
+
+        return updateViewWindowSizes(svg, viewWindow, width, height);
       }
 
-      function setZoom() {
-        var min_zoom = 0.08;
-        var max_zoom = 7;
-        return d3.behavior.zoom().scaleExtent([min_zoom, max_zoom]);
+      function updateViewWindowSizes(svg, viewWindow, windowWidth, windowHeight) {
+        var svgWidth = Number(svg.attr("width"));
+        var svgHeight = Number(svg.attr("height"));
+        return viewWindow
+          .attr("width", windowWidth)
+          .attr("height", windowHeight)
+          .attr("ry", windowWidth / 3)
+          .attr("ry", windowHeight / 3)
+          .attr("x", (svgWidth / 2 - windowWidth / 2))
+          .attr("y", (svgHeight / 2 - windowHeight / 2))
       }
+
 
       function setColorByStatus(status) {
         var colors = {
@@ -440,6 +430,40 @@
           }
         }
       }
+
+      var layouts = {
+        force: function (_force) {
+          _force.start();
+        },
+        tree: function (force, _tree, duration, allNodes, allLinks, diagonal) {
+          force.stop();
+          var delay = duration;
+          _tree.nodes(scope.data);  	// recalculate tree layout
+
+          // transition node groups
+          allNodes.transition()
+            .duration(delay)
+            .attr("transform", function (d, i) {
+              var widthCorrection = this.getBBox().width / 2;
+
+              if (widthCorrection) {
+                return "translate(" + (d.x - widthCorrection).toString() + "," + d.y.toString() + ")";
+              } else {
+                return null;
+              }
+
+            });
+
+          // transition link paths
+          allLinks.transition()
+            .duration(delay)
+            .attr("d", diagonal);
+        }
+
+
+      }
+
+
     }
   }
 
