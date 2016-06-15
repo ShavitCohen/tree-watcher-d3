@@ -9,7 +9,9 @@
  * Main module of the application.
  */
 
+
 angular.module('topView.directives', []);
+
 
 angular
   .module('topviewD3App', [
@@ -19,7 +21,8 @@ angular
     'ngRoute',
     'ngSanitize',
     'ngTouch',
-    'topView.directives'
+    'topView.directives',
+    'rzModule'
   ])
   .config(function ($routeProvider) {
     $routeProvider

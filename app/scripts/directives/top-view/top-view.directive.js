@@ -14,8 +14,8 @@
       scope: {
         width: "=",
         height: "=",
-        data: "=",
-        settings: "="
+        data: "="
+
       },
       link: link
     };
@@ -23,7 +23,39 @@
     function link(scope, elm, attrs) {
       init();
 
+      scope.settings = {
+        layout: 'force',
+        viewWindowMinWidth: 100,
+        viewWindowMinHeight: 100,
+        viewWindowMaxWidth: scope.width,
+        viewWindowMaxHeight: scope.height,
+
+        viewWindowHeightValue: null,
+        viewWindowWidthValue: null,
+
+        changeViewWindowWidth: function (val) {
+          updateViewWindowSizes(scope.settings.graphObjects.svg, scope.settings.graphObjects.viewWindow, val, scope.settings.viewWindowHeightValue);
+          markInFocusNodes(scope.settings.graphObjects.graph_g, scope.settings.graphObjects.allNodes, scope.settings.graphObjects.viewWindow);
+        },
+        changeViewWindowHeight: function (val) {
+          updateViewWindowSizes(scope.settings.graphObjects.svg, scope.settings.graphObjects.viewWindow, scope.settings.viewWindowWidthValue, val);
+          markInFocusNodes(scope.settings.graphObjects.graph_g, scope.settings.graphObjects.allNodes, scope.settings.graphObjects.viewWindow);
+        },
+        changeTreeLayout: function (val) {
+          layouts[val](scope.settings.graphObjects.force, scope.settings.graphObjects.tree, 1000, scope.settings.graphObjects.allNodes, scope.settings.graphObjects.allLinks, scope.settings.graphObjects.diagonal);
+        },
+
+        graphObjects: {
+          svg: null,
+          viewWindow: null,
+          force: null,
+          tree: null
+        }
+      };
+
       function init() {
+
+
         angular.element(elm).addClass("top-view");
         scope.$watch("data", function (val, old) {
           if (val) {
@@ -48,35 +80,44 @@
           .attr("width", width)
           .attr("height", height);
 
+        scope.settings.graphObjects.svg = svg;
+
         /** Setting view window **/
         var svgWidth = Number(svg.attr("width"));
         var svgHeight = Number(svg.attr("height"));
         var VIEW_WINDOW_WIDTH = svgWidth - (svgWidth / 3);
         var VIEW_WINDOW_HEIGHT = svgHeight - (svgHeight / 3);
+
+        scope.settings.viewWindowWidthValue = VIEW_WINDOW_WIDTH;
+        scope.settings.viewWindowHeightValue = VIEW_WINDOW_HEIGHT;
+
+
         var viewWindow = setViewWindow(svg, VIEW_WINDOW_WIDTH, VIEW_WINDOW_HEIGHT);
+        scope.settings.graphObjects.viewWindow = viewWindow;
         /** End Setting view window **/
 
 
         var graph_g = svg.append("g");
+        scope.settings.graphObjects.graph_g = graph_g;
+
         var zoom = setZoom(graph_g);
+        scope.settings.graphObjects.zoom = zoom;
 
         setInitialZoom(graph_g, zoom, viewWindow, GRAVITY_TOP_POSITION, NODE_HEIGHT);
 
         var allLinks = graph_g.selectAll(".link"),
           allNodes = graph_g.selectAll(".node");
 
+
         var force = d3.layout.force()
           .on("tick", tick);
+        scope.settings.graphObjects.force = force;
 
         var tree = d3.layout.tree();
-
+        scope.settings.graphObjects.tree = tree;
 
         update();
         layouts.force(force);
-
-        setTimeout(function () {
-          layouts.tree(force, tree, 1000, allNodes, allLinks, diagonal);
-        }, 5000);
 
 
         function updateForceBehaviour(force, nodesData, linksData) {
@@ -100,7 +141,10 @@
           .projection(function (d) {
             return [d.x, d.y];
           });
-        var flattenedNodes,nodesData;
+
+        scope.settings.graphObjects.diagonal = diagonal;
+
+        var flattenedNodes, nodesData;
 
         function update() {
 
@@ -142,6 +186,9 @@
 
           allNodes = paintNodes(allNodes, NODE_HEIGHT);
 
+          scope.settings.graphObjects.allLinks = allLinks;
+          scope.settings.graphObjects.allNodes = allNodes;
+
           allNodes = setEvents(allNodes, {
               'mouseover': function (d) {
                 this.parentNode.appendChild(this); //on mouse over we appending the child again so it will be on top (z-index)
@@ -159,7 +206,7 @@
                 var dcy = (height / 2 - d.y * zoom.scale());
                 zoom.translate([dcx, dcy]);
                 graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + zoom.scale() + ")");
-                markInFocusNodes(graph_g);
+                markInFocusNodes(graph_g, allNodes, viewWindow);
               },
               'click': function (d) {
                 if (d3.event.defaultPrevented) return; // ignore drag
@@ -186,29 +233,11 @@
           return setEvents(zoom, {
             'zoom': function (d) {
               graph_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-              markInFocusNodes(graph_g);
+              markInFocusNodes(graph_g, allNodes, viewWindow);
             }
           });
         }
 
-        function markInFocusNodes(g) {
-          var gTransform = d3.transform(g.attr("transform"));
-
-          var gx = gTransform.translate[0];
-          var gy = gTransform.translate[1];
-          var gScale = gTransform.scale[0];
-
-          allNodes.each(function (d) {
-            var realX = (gx / gScale) + d.x;
-            var realY = (gy / gScale) + d.y;
-            d.inFocus = hitTest_roomRec(realX, realY, gScale);
-          });
-
-          allNodes
-            .classed("in-focus", function (d) {
-              return d.inFocus ? true : false;
-            })
-        }
 
         function setInitialZoom(graph_g, zoom, viewWindow, rootY, nodeHeight) {
           var yTransform = Number(viewWindow.attr("y")) + nodeHeight + (-1 * rootY);
@@ -216,16 +245,6 @@
           graph_g.attr("transform", "translate(" + 0 + "," + yTransform + ")");
         }
 
-        function hitTest_roomRec(realX, realY, gScale) {
-          var zoomRectX = Number(viewWindow.attr("x")),
-            zoomRectWidth = Number(viewWindow.attr("width")),
-            zoomRectY = Number(viewWindow.attr("y")),
-            zoomRectHeight = Number(viewWindow.attr("height"));
-
-          return (realX >= zoomRectX / gScale && realX <= (zoomRectX + zoomRectWidth) / gScale)
-            && (realY >= zoomRectY / gScale && realY <= (zoomRectY + zoomRectHeight) / gScale)
-            ;
-        }
 
         function arrangeElements() {
           allLinks
@@ -248,7 +267,7 @@
 
               return "translate(" + (d.x - (this.getBBox().width / 2)) + "," + (d.y) + ")";
             });
-          markInFocusNodes(graph_g);
+          markInFocusNodes(graph_g, allNodes, viewWindow);
         }
 
 
@@ -368,6 +387,37 @@
         return updateViewWindowSizes(svg, viewWindow, width, height);
       }
 
+
+      function markInFocusNodes(g, allNodes, viewWindow) {
+        var gTransform = d3.transform(g.attr("transform"));
+
+        var gx = gTransform.translate[0];
+        var gy = gTransform.translate[1];
+        var gScale = gTransform.scale[0];
+
+        allNodes.each(function (d) {
+          var realX = (gx / gScale) + d.x;
+          var realY = (gy / gScale) + d.y;
+          d.inFocus = hitTest_roomRec(realX, realY, gScale, viewWindow);
+        });
+
+        allNodes
+          .classed("in-focus", function (d) {
+            return d.inFocus ? true : false;
+          })
+      }
+
+      function hitTest_roomRec(realX, realY, gScale, viewWindow) {
+        var zoomRectX = Number(viewWindow.attr("x")),
+          zoomRectWidth = Number(viewWindow.attr("width")),
+          zoomRectY = Number(viewWindow.attr("y")),
+          zoomRectHeight = Number(viewWindow.attr("height"));
+
+        return (realX >= zoomRectX / gScale && realX <= (zoomRectX + zoomRectWidth) / gScale)
+          && (realY >= zoomRectY / gScale && realY <= (zoomRectY + zoomRectHeight) / gScale)
+          ;
+      }
+
       function updateViewWindowSizes(svg, viewWindow, windowWidth, windowHeight) {
         var svgWidth = Number(svg.attr("width"));
         var svgHeight = Number(svg.attr("height"));
@@ -378,6 +428,7 @@
           .attr("ry", windowHeight / 3)
           .attr("x", (svgWidth / 2 - windowWidth / 2))
           .attr("y", (svgHeight / 2 - windowHeight / 2))
+
       }
 
 

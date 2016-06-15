@@ -1,0 +1,56 @@
+.top-view-settings-menu {
+  height: 75px;
+  background-color: white;
+  position: absolute;
+  border: 1px solid #a7a7a7;
+  padding:10px;
+  color:#55637d;
+  font-size:10pt;
+  margin-left:40px;
+
+  .layout-wrapper {
+    width: 130px;
+    float: left;
+    label{
+      cursor: pointer;
+    }
+
+    & > div {
+      margin-bottom: 26px;
+    }
+  }
+  .slide-width-wrapper {
+
+    width: 300px;
+    float: left;
+    margin-left: 20px;
+
+  }
+  .slide-height-wrapper {
+
+    width: 300px;
+    float: left;
+    margin-left: 20px;
+  }
+
+  .rzslider{
+    .rz-pointer{
+      top: -6px;
+      width: 15px;
+      height: 15px;
+      font-size: 10pt;
+      &:after{
+        top: 5px;
+        left: 5px;
+        width: 5px;
+        height: 5px;
+      }
+    }
+    .rz-bubble{
+      font-size: 10pt;
+      bottom:-25px;
+    }
+
+  }
+
+}

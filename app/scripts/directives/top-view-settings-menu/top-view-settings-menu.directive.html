@@ -1,0 +1,32 @@
+<div class="top-view-settings-menu">
+  <div class="layout-wrapper">
+    <div>
+      Tree Layout
+    </div>
+    <label>
+      <input name="layoutRadio" type="radio" ng-model="layout" value="force"> Force
+    </label>
+    <label>
+      <input name="layoutRadio" type="radio" ng-model="layout" value="tree"> Tree
+    </label>
+  </div>
+
+  <div class="slide-width-wrapper">
+    <div>
+      Focus Width:
+    </div>
+    <rzslider rz-slider-options="sliderOptionsWidth"
+              rz-slider-model="viewWindowWidthValue"
+              id="sliderWidth"
+      ></rzslider>
+  </div>
+  <div class="slide-height-wrapper">
+    <div>
+      Focus Height:
+    </div>
+    <rzslider rz-slider-options="sliderOptionsHeight"
+              rz-slider-model="viewWindowHeightValue"
+              id="sliderHeight"
+      ></rzslider>
+  </div>
+</div>
