@@ -4,218 +4,358 @@
   "name": "End User Monitors",
   "children": [
     {
-      "id": "1aaa",
-      "name": "random",
-      "status": -2,
+      "id": "1",
+      "name": "BatAlertAPI"
+    },
+    {
+      "id": "10",
+      "name": "ClAlerts_BAT_App",
+      "status": "5",
       "children": [
         {
-          "id": "1;;e7bab76f29122a35ed94a2fd8ec0002c;;2e33acc2ec3441673df9b756f688f6ad",
-          "name": "random_status",
-          "status": -2,
+          "id": "11",
+          "name": "BatAlertAPI",
+          "status": "5",
           "children": [
             {
-              "id": "1aaae3dewer",
-              "name": "tx_random",
-              "children": []
+              "id": "12",
+              "name": "tx_ok",
+              "status": "5",
+              "children": [
+                {
+                  "id": "13",
+                  "status": "5",
+                  "name": "ok"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "14",
+          "name": "ClAlerts_BAT_BTF",
+          "children": [
+            {
+              "id": "15",
+              "name": "tx_5"
+            },
+            {
+              "id": "16",
+              "name": "tx_1_failed"
+            },
+            {
+              "id": "17",
+              "name": "tx_2_failed"
             }
           ]
         }
       ]
     },
     {
-      "id": "89893890230238",
-      "name": "testing",
-      "classification": null,
-      "status": 20,
+      "id": "20",
+      "name": "Default Client_BAT_App",
+      "status": "0",
       "children": [
         {
-          "id": "9023849082304238023480808",
-          "name": "tx_ok",
-          "status": 20,
+          "id": "21",
+          "name": "Default ClAlerts_BAT_BTF",
+          "status": "0",
           "children": [
             {
-              "id": "012380123808",
+              "id": "22",
               "name": "ok",
-              "status": 20,
-              "children": [
-              ]
+              "status": "5"
+            },
+            {
+              "id": "23",
+              "name": "tx_1_failed",
+              "status": "0"
+            },
+            {
+              "id": "24",
+              "name": "tx_2_failed",
+              "status": "0"
+            },
+            {
+              "id": "25",
+              "name": "warning",
+              "status": "-1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "30",
+      "name": "Default Client_BAT_App_SLA",
+      "children": [
+        {
+          "id": "31",
+          "name": "Default Client_BAT_BTF_SLA",
+          "children": [
+            {
+              "id": "32",
+              "name": "BAT_100per"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id":"40",
+      "name":"elenok",
+      "status":"0",
+      "children": [
+        {
+          "id": "41",
+          "name": "tx_fail",
+          "status": "0",
+          "children": [
+            {
+              "id": "42",
+              "name": "tx_1_failed",
+              "status": "0"
+            },
+            {
+              "id": "43",
+              "name": "tx_2_failed",
+              "status": "0"
             }
           ]
         },
         {
-          "id": "432984723",
-          "name": "RYG",
-          "status": 0,
+          "id": "44",
+          "name": "tx_ok",
+          "status": "5",
           "children": [
             {
-              "id": "394729",
-              "name": "aR_Y_G",
-              "status": 0,
-              "children": [
+              "id": "45",
+              "name": "ok",
+              "status": "5"
+            }
+          ]
+        },
+        {
+          "id": "46",
+          "name": "tx_warning",
+          "status": "-1",
+          "children": [
+            {
+              "id": "47",
+              "name": "warning",
+              "status": "-1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "50",
+      "name": "Green",
+      "status": "5",
+      "children": [
+        {
+          "id": "51",
+          "name": "Green_BTF",
+          "status": "5",
+          "children": [
+            {
+              "id": "52",
+              "name": "ok",
+              "status": "5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "name": "Red",
+      "status": "0",
+      "children": [
+        {
+          "id": "61",
+          "name": "Red_BTF",
+          "status": "0",
+          "children": [
+            {
+              "id": "62",
+              "name": "tx_1_failed",
+              "status": "0"
+            },
+            {
+              "id": "63",
+              "name": "tx_2_failed",
+              "status": "0"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "70",
+      "name": "SLMAlerts_BAT_APP",
+      "children": [
+        {
+          "id": "71",
+          "name": "SLMAlerts_BAT_BTF",
 
-                {
-                  "id": "999898",
-                  "name": "Red",
-                  "status": 0,
-                  "children": [
-                  ]
-                },
-                {
-                  "id": "01",
-                  "name": "aYellow",
-                  "status": 0,
-                  "children": [
-                    {
-                      "id": "00203948",
-                      "name": "Green",
-                      "status": 20,
-                      "children": [
-                        {
-                          "id": "00202222223948",
-                          "name": "Green1",
-                          "status": 20,
-                          "children": [
-                          ]
-                        },
-                        {
-                          "id": "99989833333333444",
-                          "name": "Red3",
-                          "status": 0,
-                          "children": [
-                          ]
-                        },
-                        {
-                          "id": "02",
-                          "name": "Yellow3",
-                          "status": 0,
-                          "children": [
-                            {
-                              "id": "002031211121211212948",
-                              "name": "Gr313131een",
-                              "status": 20,
-                              "children": [
-                              ]
-                            },
-                            {
-                              "id": "999893213123123128",
-                              "name": "R2222ed",
-                              "status": 0,
-                              "children": [
-                              ]
-                            },
-                            {
-                              "id": "04",
-                              "name": "Yellow2223ssss",
-                              "status": 10,
-                              "children": []
-                            },
-                            {
-                              "id": "1aaaaa1",
-                              "name": "111ddd11",
-                              "status": 10,
-                              "children": [
-                                {
-                                  "id": "1002031211121211212948",
-                                  "name": "ssssGr313131een",
-                                  "status": 20,
-                                  "children": [
-                                  ]
-                                },
-                                {
-                                  "id": "3999893213123123128",
-                                  "name": "ssssR2222ed",
-                                  "status": 0,
-                                  "children": [
-                                  ]
-                                },
-                                {
-                                  "id": "404",
-                                  "name": "sssss",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "11",
-                                  "name": "11111",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "afsdf",
-                                  "name": "3242423",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "dddfsdfsdfsd",
-                                  "name": "342342342342314324123",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "11fsdfsdf4",
-                                  "name": "11dsfs3123123123df4111",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "11fsdaaafaaaasdfsdf5111111",
-                                  "name": "15",
-                                  "status": 10,
-                                  "children": []
-                                },
-                                {
-                                  "id": "11fasdfasfa2347",
-                                  "name": "17111111231312312312",
-                                  "status": 10,
-                                  "children": []
-                                }
-                              ]
-                            },
-                            {
-                              "id": "112",
-                              "name": "121111",
-                              "status": 10,
-                              "children": []
-                            },
-                            {
-                              "id": "113",
-                              "name": "1",
-                              "status": 10,
-                              "children": []
-                            },
-                            {
-                              "id": "114",
-                              "name": "11dsfsdf4111",
-                              "status": 10,
-                              "children": []
-                            },
-                            {
-                              "id": "122215",
-                              "name": "1511232311",
-                              "status": 10,
-                              "children": []
-                            },
-                            {
-                              "id": "117",
-                              "name": "171111",
-                              "status": 10,
-                              "children": []
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
+          "children": [
+            {
+              "id": "72",
+              "name": "tx_5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id":"80",
+      "name":"TEST",
+      "status":"0",
+      "children":[
+        {
+          "id": "81",
+          "name": "BAT_100per",
+          "status": "5",
+          "children": [
+            {
+              "id": "82",
+              "name": "BAT_100per",
+              "status": "5"
+            }
+          ]
+        },
+        {
+          "id": "83",
+          "name": "tx_5",
+          "status": "5",
+          "children": [
+            {
+              "id": "84",
+              "name": "tx_5",
+              "status": "5"
+            }
+          ]
+        },
+        {
+          "id": "85",
+          "name": "tx_fail",
+          "status": "0",
+          "children": [
+            {
+              "id": "86",
+              "name": "tx_1_failed",
+              "status": "0"
+            },
+            {
+              "id": "87",
+              "name": "tx_2_failed",
+              "status": "0"
+            }
+          ]
+        },
+        {
+          "id": "88",
+          "name": "tx_ok",
+          "status": "5",
+          "children": [
+            {
+              "id": "89",
+              "name": "ok",
+              "status": "5"
+            }
+          ]
+        },
+        {
+          "id": "801",
+          "name": "tx_warning",
+          "status": "-1",
+          "children": [
+            {
+              "id": "802",
+              "name": "warning",
+              "status": "-1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id":"90",
+      "name":"TEST_2",
+      "children":[
+        {
+          "id": "91",
+          "name": "BAT_100per",
+          "children": [
+            {
+              "id": "92",
+              "name": "BAT_100per"
+            }
+          ]
+        },
+        {
+          "id": "93",
+          "name": "tx_5",
+          "children": [
+            {
+              "id": "94",
+              "name": "tx_5"
+            }
+          ]
+        },
+        {
+          "id": "95",
+          "name": "tx_fail",
+          "children": [
+            {
+              "id": "96",
+              "name": "tx_1_failed"
+            },
+            {
+              "id": "97",
+              "name": "tx_2_failed"
+            }
+          ]
+        },
+        {
+          "id": "98",
+          "name": "tx_ok",
+          "children": [
+            {
+              "id": "99",
+              "name": "ok"
+            }
+          ]
+        },
+        {
+          "id": "901",
+          "name": "tx_warning",
+          "children": [
+            {
+              "id": "902",
+              "name": "warning"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "100",
+      "name": "Yellow",
+      "children": [
+        {
+          "id": "101",
+          "name": "Yellow_BTF",
+          "children": [
+            {
+              "id": "102",
+              "name": "warning"
             }
           ]
         }
       ]
     }
-
-
-
   ]
 }
