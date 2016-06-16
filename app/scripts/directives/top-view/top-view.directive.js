@@ -325,11 +325,14 @@
 
           });
 
-
+        var roundCornersVal = 5;
         //then we add a rect and uses the width of the rect
         var rect = allNodes
-          .append("rect")
+          .append("g")
           .attr("class", "rect")
+
+        rect
+          .append("rect")
           .attr("width", function (d) {
             return d.width + _WIDTH_ADDITION_TO_RECT;
           })
@@ -338,7 +341,37 @@
             return setColorByStatus(d.status);
           })
           .style("stroke", "black")
-          .style("stroke-width", "1px");
+          .style("stroke-width", "1px")
+          .attr("rx", roundCornersVal)
+          .attr("ry", roundCornersVal)
+
+        var toggleButton =
+          rect.append("g")
+            .attr("transform",
+            function (d) {
+              return "translate(" + (d.width + _WIDTH_ADDITION_TO_RECT - 15).toString() + "," + 2 + ")";
+            })
+            .attr("class", function (d) {
+              return 'toggle-children' + (d.children && d.children.length > 0 ? " has-children" : "")
+            });
+
+
+        toggleButton
+          .append("svg:image")
+          .attr("class","img plus")
+          .attr("xlink:href", "./images/plus-square-o.svg")
+          .attr("width", 12)
+          .attr("height", 12)
+
+        /*toggleButton
+          .append("svg:image")
+          .attr("class","img minus")
+          .attr("xlink:href", "./images/minus-square-o.svg")
+          .attr("width", 12)
+          .attr("height", 12)*/
+
+
+
 
         var circle = allNodes
           .append("circle")

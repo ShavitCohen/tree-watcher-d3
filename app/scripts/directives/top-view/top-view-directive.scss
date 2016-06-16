@@ -8,8 +8,24 @@
   }
 
   .node-group {
+
+    .rect {
+      .toggle-children {
+        opacity:0;
+        &.has-children{
+          opacity:1;
+        }
+
+      }
+    }
+
+    .rect-text {
+
+    }
+
     .rect, .rect-text {
       opacity: 0;
+
     }
 
     .node-circle {

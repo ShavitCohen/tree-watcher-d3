@@ -1,4 +1,8 @@
 <div class="top-view-settings-menu">
+  <div class="settings-icon" ng-click="showSettings=!showSettings">
+    <i class="fa fa-cogs" aria-hidden="true"></i>
+  </div>
+  <div class="settings-wrapper" ng-class="{show:showSettings}">
   <div class="layout-wrapper">
     <div>
       Tree Layout
@@ -28,5 +32,6 @@
               rz-slider-model="viewWindowHeightValue"
               id="sliderHeight"
       ></rzslider>
+  </div>
   </div>
 </div>
