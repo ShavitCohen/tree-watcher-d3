@@ -28,7 +28,6 @@
     };
 
     function link(scope, elm, attrs) {
-      console.log(scope);
       scope.sliderOptionsHeight = {
         floor: scope.viewWindowMinHeight,
         ceil: scope.viewWindowMaxHeight,
