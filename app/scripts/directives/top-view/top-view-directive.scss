@@ -1,24 +1,99 @@
 .top-view {
+
+  svg.hide-all {
+    .node-group {
+      .rect,text {
+        opacity: 0;
+      }
+
+      .node-circle {
+        opacity: 0.3;
+      }
+
+      &.watching.in-focus{
+        .rect,text {
+          opacity: 1;
+        }
+        .node-circle {
+          opacity: 0;
+        }
+
+      }
+    }
+
+
+
+  }
+
   .node-group * {
-  /*  -webkit-transition: all 200ms ease;
-    -moz-transition: all 200ms ease;
-    -ms-transition: all 200ms ease;
-    -o-transition: all 200ms ease;
-    transition: all 200ms ease;*/
+    /*  -webkit-transition: all 200ms ease;
+      -moz-transition: all 200ms ease;
+      -ms-transition: all 200ms ease;
+      -o-transition: all 200ms ease;
+      transition: all 200ms ease;*/
   }
 
   .node-group {
     .rect {
+
+      &.root {
+        .rect-buttons {
+          .pin-button, .un-pin-button {
+            display: none !important;
+          }
+        }
+      }
+
+      .rect-buttons {
+        .plus, .minus, .pin-button, .un-pin-button {
+          display: none;
+        }
+
+        &.has-children {
+          cursor: pointer;
+          .plus {
+            display: none;
+          }
+          .minus {
+            display: block;
+          }
+
+          &.collapsed {
+            .plus {
+              display: block;
+            }
+            .minus {
+              display: none;
+            }
+          }
+
+          .pin-button {
+            display: block;
+          }
+
+          .root-watching {
+            .pin-button {
+              display: none;
+            }
+            .un-pin-button {
+              display: block;
+            }
+          }
+
+        }
+
+      }
+
       .toggle-children {
-        opacity:0;
-        &.has-children{
-          opacity:1;
+        opacity: 0;
+        &.has-children {
+          opacity: 1;
         }
       }
     }
 
     .rect-text {
-      fill:white;
+      fill: white;
     }
 
     .rect, .rect-text {

@@ -20,14 +20,17 @@
     };
 
     function link(scope, elm, attrs) {
+      var cache = {
+        watchingElements: {}
+      }
       var settings = {
         consts: {
-          GRAVITY_TOP_POSITION: -50,
+          GRAVITY_TOP_POSITION: scope.height / 2,
           NODE_HEIGHT: 15,
           GRAVITY: 0.1,
           CHARGE: -500,
-          FRICTION: 0.7,
-          ROOT_TO_CHILD_LINK_DISTANCE: 100,
+          FRICTION: 0.8,
+          ROOT_TO_CHILD_LINK_DISTANCE: 200,
           NODE_TO_NODE_WITH_CHILDREN_DISTANCE: 100,
           NODE_TO_EMPTY_NODE_LINK_DISTANCE: 25,
           MIN_ZOOM: 0.07,
@@ -77,13 +80,16 @@
         viewWindowWidth_initialValue: null,
 
         viewWindowMaxHeight: scope.height,
+        layout:settings.layout,
 
         logic: {
           changeViewWindowWidth: function (val) {
+            settings.viewWindowWidthValue = val;
             updateViewWindowSizes(settings.graphObjects.svg, settings.graphObjects.viewWindow, val, settings.viewWindowHeightValue);
             markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
           },
           changeViewWindowHeight: function (val) {
+            settings.viewWindowHeightValue = val;
             updateViewWindowSizes(settings.graphObjects.svg, settings.graphObjects.viewWindow, settings.viewWindowWidthValue, val);
             markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
           },
@@ -215,9 +221,11 @@
           .enter()
           .append("g")
           .attr("class", "node-group")
-          .call(settings.graphObjects.force.drag);
+          .call(settings.graphObjects.force.drag)
+          .call(paintNodes)
 
-        settings.graphObjects.allNodes = paintNodes(settings.graphObjects.allNodes, NODE_HEIGHT);
+
+        //settings.graphObjects.allNodes = paintNodes(settings.graphObjects.allNodes, NODE_HEIGHT);
 
         updateForceBehaviour(settings.graphObjects.force, nodesData, linksData);
 
@@ -225,6 +233,7 @@
             'mouseover': function (d) {
               this.parentNode.appendChild(this); //on mouse over we appending the child again so it will be on top (z-index)
               highlightPathToRoot(d, settings.graphObjects.graph_g);
+
             },
             'mousedown': function (d) {
               d3.event.stopPropagation();
@@ -241,15 +250,7 @@
               markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
             },
             'click': function (d) {
-              if (d3.event.defaultPrevented) return; // ignore drag
-              if (d.children) {
-                d._children = d.children;
-                d.children = null;
-              } else {
-                d.children = d._children;
-                d._children = null;
-              }
-              update(settings.data);
+
             }
           }
         );
@@ -313,6 +314,7 @@
       function flattenTreeToNodesArray(root, rootPosX, rootPosY) {
         var nodes = [], i = 0;
         root.fixed = true;
+        root.isRoot = true;
         root.x = rootPosX;
         root.y = rootPosY;
 
@@ -336,7 +338,8 @@
 
 
       // Exit any old nodes.
-      function paintNodes(allNodes, nodeHeight) {
+      function paintNodes(allNodes) {
+
         //first we creates the nodes in order to capture their width
         var _WIDTH_ADDITION_TO_RECT = 50;
         var text = allNodes.append("text")
@@ -359,52 +362,170 @@
         //then we add a rect and uses the width of the rect
         var rect = allNodes
           .append("g")
-          .attr("class", "rect")
+          .attr("class", function (d) {
+            var _class = "rect";
+            _class = d.isRoot ? _class + " root" : _class;
+            return _class;
+          });
 
         rect
           .append("rect")
           .attr("width", function (d) {
             return d.width + _WIDTH_ADDITION_TO_RECT;
           })
-          .attr("height", nodeHeight)
+          .attr("height", NODE_HEIGHT)
           .style("fill", function (d) {
             return setColorByStatus(d.status);
           })
           .style("stroke", "black")
           .style("stroke-width", "1px")
           .attr("rx", roundCornersVal)
-          .attr("ry", roundCornersVal)
+          .attr("ry", roundCornersVal);
 
-        var toggleButton =
+
+        var rectButtons =
           rect.append("g")
             .attr("transform",
             function (d) {
-              return "translate(" + (d.width + _WIDTH_ADDITION_TO_RECT - 15).toString() + "," + 2 + ")";
+              return "translate(" + (d.width + _WIDTH_ADDITION_TO_RECT - 30).toString() + "," + 2 + ")";
             })
             .attr("class", function (d) {
-              return 'toggle-children' + (d.children && d.children.length > 0 ? " has-children" : "")
+              return setClassToButtonsContainer(d);
             });
 
 
-        toggleButton
+        var pinButtonsContainer = rectButtons
+          .append("g");
+
+
+        pinButtonsContainer
           .append("svg:image")
-          .attr("class", "img plus")
-          .attr("xlink:href", "./images/plus-square-o.svg")
+          .attr("class", "img pin-button")
+          .attr("xlink:href", "./images/eye.svg")
           .attr("width", 12)
           .attr("height", 12)
 
-        /*toggleButton
-         .append("svg:image")
-         .attr("class","img minus")
-         .attr("xlink:href", "./images/minus-square-o.svg")
-         .attr("width", 12)
-         .attr("height", 12)*/
+
+        pinButtonsContainer
+          .append("svg:image")
+          .attr("class", "img un-pin-button")
+          .attr("xlink:href", "./images/eye-slash.svg")
+          .attr("width", 12)
+          .attr("height", 12)
+
+
+        setEvents(pinButtonsContainer, {
+          'click': function (d) {
+            if (!cache.watchingElements[d.id]) {
+              d.fixed = true;
+              d.watchingRoot = true;
+              watchNode(d);
+              cache.watchingElements[d.id] = true;
+            } else {
+              d.watchingRoot = false;
+              delete cache.watchingElements[d.id];
+              unWatchNode(d);
+            }
+            d3.select(this)
+              .classed("root-watching", d.watchingRoot);
+          },
+          'mouseover': function (d) {
+            if (Object.keys(cache.watchingElements).length === 0) {
+              watchNode(d);
+            }
+          },
+          'mouseout': function (d) {
+            if (Object.keys(cache.watchingElements).length === 0) {
+              unWatchNode(d);
+            }
+          }
+        });
+
+        function watchNode(d) {
+
+          setAttrToAllChildren(d, "watching", true);
+
+          d3.select("svg")
+            .classed("hide-all", true);
+
+          allNodes.each(function(d){
+            d3.select(this).classed("watching", function (d) {
+              return d.watching;
+            })
+          })
+
+        }
+
+        function unWatchNode(d) {
+          d.fixed = false;
+
+          // we want to make sure that there are no children which the user already selected
+          var ifFunction = function (d) {
+            return !cache.watchingElements[d.id];
+          };
+
+          setAttrToAllChildren(d, "watching", false, ifFunction);
+
+          if(Object.keys(cache.watchingElements).length == 0){
+            d3.select("svg")
+              .classed("hide-all", false);
+          }
+
+
+          allNodes
+            .classed("watching", function (d) {
+              return d.watching;
+            })
+
+        }
+
+
+        rectButtons
+          .append("svg:image")
+          .attr("class", "img minus un-collpase-children")
+          .attr("xlink:href", "./images/minus-square-o.svg")
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("x", 15)
+          .on("click", function (d) {
+            if (d3.event.defaultPrevented) return; // ignore drag
+            if (d.children) {
+              d._children = d.children;
+              d.children = null;
+            }
+            update(settings.data);
+            allNodes.selectAll(".rect-buttons")
+              .attr("class", function (d) {
+                return setClassToButtonsContainer(d);
+              })
+
+          });
+
+        rectButtons
+          .append("svg:image")
+          .attr("class", "img plus collapse-children")
+          .attr("xlink:href", "./images/plus-square-o.svg")
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("x", 15)
+          .on("click", function (d) {
+            if (d3.event.defaultPrevented) return; // ignore drag
+            if (d._children) {
+              d.children = d._children;
+              d._children = null;
+            }
+            update(settings.data);
+            allNodes.selectAll(".rect-buttons")
+              .attr("class", function (d) {
+                return setClassToButtonsContainer(d);
+              })
+          });
 
 
         var circle = allNodes
           .append("circle")
           .attr("class", "node-circle")
-          .attr("r", nodeHeight / 4)
+          .attr("r", NODE_HEIGHT / 4)
           .attr("cx", function (d) {
             return (d.width + _WIDTH_ADDITION_TO_RECT) / 2;
           })
@@ -577,6 +698,38 @@
         return layouts[layoutName](settings.graphObjects.force, settings.graphObjects.tree, 1000, settings.graphObjects.allNodes, settings.graphObjects.allLinks, settings.graphObjects.diagonal);
       }
 
+      function setClassToButtonsContainer(d) {
+        var _class = ["rect-buttons"];
+        if (d.fixed == true && !d.isRoot) {
+          _class.push("pined")
+        }
+        if (d.children && d.children.length > 0) {
+          _class.push("has-children");
+        }
+        if (d._children && d._children.length > 0) {
+          _class.push("has-children collapsed");
+        }
+        return _class.join(" ");
+      }
+
+      function setAttrToAllChildren(d, attr, value, ifFunction) {
+        if (!ifFunction) {
+          ifFunction = function () {
+            return true
+          };
+        }
+
+        if (ifFunction(d)) {
+          d[attr] = value;
+
+          var children = d.children || d._children;
+          if (children) {
+            children.forEach(function (child) {
+              setAttrToAllChildren(child, attr, value, ifFunction);
+            })
+          }
+        }
+      }
 
     }
   }
