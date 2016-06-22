@@ -8,30 +8,31 @@
  *
  * Main module of the application.
  */
+(function(){
+  angular.module('topView.directives', []);
 
+  angular
+    .module('topviewD3App', [
+      'ngAnimate',
+      'ngCookies',
+      'ngResource',
+      'ngRoute',
+      'ngSanitize',
+      'ngTouch',
+      'topView.directives',
+      'rzModule'
+    ])
+    .config(function ($routeProvider) {
+      $routeProvider
+        .when('/', {
+          templateUrl: 'views/main.html',
+          controller: 'MainCtrl',
+          controllerAs: 'main'
+        })
+        .otherwise({
+          redirectTo: '/'
+        });
+    });
 
-angular.module('topView.directives', []);
+})();
 
-
-angular
-  .module('topviewD3App', [
-    'ngAnimate',
-    'ngCookies',
-    'ngResource',
-    'ngRoute',
-    'ngSanitize',
-    'ngTouch',
-    'topView.directives',
-    'rzModule'
-  ])
-  .config(function ($routeProvider) {
-    $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl',
-        controllerAs: 'main'
-      })
-      .otherwise({
-        redirectTo: '/'
-      });
-  });

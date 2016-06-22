@@ -20,33 +20,10 @@
     };
 
     function link(scope, elm, attrs) {
+
+      //This var will be use as a global var which holds ad-hock data for graph manipulation
       var cache = {
-        watchingElements: {}
-      }
-      var settings = {
-        consts: {
-          GRAVITY_TOP_POSITION: scope.height / 2,
-          NODE_HEIGHT: 15,
-          GRAVITY: 0.1,
-          CHARGE: -500,
-          FRICTION: 0.8,
-          ROOT_TO_CHILD_LINK_DISTANCE: 200,
-          NODE_TO_NODE_WITH_CHILDREN_DISTANCE: 100,
-          NODE_TO_EMPTY_NODE_LINK_DISTANCE: 25,
-          MIN_ZOOM: 0.07,
-          MAX_ZOOM: 7
-        },
-
-        width: null,
-        height: null,
-
-        data: null,
-
-        layout: 'force',
-
-        viewWindowHeightValue: null,
-        viewWindowWidthValue: null,
-
+        watchingElements: {},
         graphObjects: {
           svg: null,
           viewWindow: null,
@@ -57,20 +34,38 @@
           diagonal: null,
           allLinks: null,
           allNodes: null
-        }
+        },
+        width: null,
+        height: null,
+
+        data: null,
+
+        layout: 'force',
+
+        viewWindowHeightValue: null,
+        viewWindowWidthValue: null
       };
 
+      //This var holds the settings of the graph.
+      var consts = {
+        ROOT_Y_POSITION: scope.height / 2,
 
-      var GRAVITY_TOP_POSITION = settings.consts.GRAVITY_TOP_POSITION,
-        NODE_HEIGHT = settings.consts.NODE_HEIGHT,
-        GRAVITY = settings.consts.GRAVITY,
-        CHARGE = settings.consts.CHARGE,
-        FRICTION = settings.consts.FRICTION,
-        ROOT_TO_CHILD_LINK_DISTANCE = settings.consts.ROOT_TO_CHILD_LINK_DISTANCE,
-        NODE_TO_NODE_WITH_CHILDREN_DISTANCE = settings.consts.NODE_TO_NODE_WITH_CHILDREN_DISTANCE,
-        NODE_TO_EMPTY_NODE_LINK_DISTANCE = settings.consts.NODE_TO_EMPTY_NODE_LINK_DISTANCE;
+        NODE_HEIGHT: 15,
 
+        GRAVITY: 0.1,
+        CHARGE: -500,
+        FRICTION: 0.8,
 
+        ROOT_TO_CHILD_LINK_DISTANCE: 200,
+
+        NODE_TO_NODE_WITH_CHILDREN_DISTANCE: 100,
+        NODE_TO_EMPTY_NODE_LINK_DISTANCE: 25,
+
+        MIN_ZOOM: 0.07,
+        MAX_ZOOM: 7
+      };
+
+      //We are using this object for the settingsMenu directive.
       scope.settingsMenuObj = {
         viewWindowMinWidth: 100,
         viewWindowMaxWidth: scope.width,
@@ -80,174 +75,191 @@
         viewWindowWidth_initialValue: null,
 
         viewWindowMaxHeight: scope.height,
-        layout:settings.layout,
+        layout: cache.layout,
 
+        //this attribute holds the logic for any cahnge in the layout, viewWindow width / height
         logic: {
           changeViewWindowWidth: function (val) {
-            settings.viewWindowWidthValue = val;
-            updateViewWindowSizes(settings.graphObjects.svg, settings.graphObjects.viewWindow, val, settings.viewWindowHeightValue);
-            markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
+            cache.viewWindowWidthValue = val;
+            updateViewWindowSizes(cache.graphObjects.svg, cache.graphObjects.viewWindow, val, cache.viewWindowHeightValue);
+            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           },
           changeViewWindowHeight: function (val) {
-            settings.viewWindowHeightValue = val;
-            updateViewWindowSizes(settings.graphObjects.svg, settings.graphObjects.viewWindow, settings.viewWindowWidthValue, val);
-            markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
+            cache.viewWindowHeightValue = val;
+            updateViewWindowSizes(cache.graphObjects.svg, cache.graphObjects.viewWindow, cache.viewWindowWidthValue, val);
+            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           },
           changeTreeLayout: function (val) {
-            settings.layout = val;
-            activateLayout(settings.layout);
+            cache.layout = val;
+            activateLayout(cache.layout);
           }
         }
       };
 
       init();
 
+
       function init() {
-        initSettingsObj(scope.width, scope.height);
 
         angular.element(elm).addClass("top-view");
+
+        initCacheObj(scope.width, scope.height);
+
+        /**
+         * Any change in the data should trigger an update
+         */
         scope.$watch("data", function (val, old) {
           if (val) {
-            settings.data = val;
-            update(settings.data);
-            activateLayout(settings.layout);
+            cache.data = val;
+            update(cache.data);
+            activateLayout(cache.layout);
 
           }
         })
       }
 
-      function initSettingsObj(width, height) {
 
-        settings.width = width;
-        settings.height = height;
+      /**
+       * Initiation the cache object
+       * @param svgWidth
+       * @param svgHeight
+       */
+      function initCacheObj(svgWidth, svgHeight) {
 
+        cache.width = svgWidth;
+        cache.height = svgHeight;
+
+        //creating the svg and appending to the element
         var svg = d3.select(elm[0]).append("svg")
-          .attr("width", width)
-          .attr("height", height);
-        settings.graphObjects.svg = svg;
+          .attr("width", svgWidth)
+          .attr("height", svgHeight);
 
-        /** Setting view window **/
-        var svgWidth = Number(svg.attr("width"));
-        var svgHeight = Number(svg.attr("height"));
-
+        cache.graphObjects.svg = svg;
 
         var VIEW_WINDOW_WIDTH = svgWidth - (svgWidth / 3);
-        settings.viewWindowWidthValue = scope.settingsMenuObj.viewWindowWidth_initialValue = VIEW_WINDOW_WIDTH;
+        cache.viewWindowWidthValue = scope.settingsMenuObj.viewWindowWidth_initialValue = VIEW_WINDOW_WIDTH;
+
         var VIEW_WINDOW_HEIGHT = svgHeight - (svgHeight / 3);
-        settings.viewWindowHeightValue = scope.settingsMenuObj.viewWindowHeight_initialValue = VIEW_WINDOW_HEIGHT;
+        cache.viewWindowHeightValue = scope.settingsMenuObj.viewWindowHeight_initialValue = VIEW_WINDOW_HEIGHT;
 
-
+        //calling a function which creates the viewWindow
         var viewWindow = setViewWindow(svg, VIEW_WINDOW_WIDTH, VIEW_WINDOW_HEIGHT);
-        settings.graphObjects.viewWindow = viewWindow;
-        /** End Setting view window **/
+        cache.graphObjects.viewWindow = viewWindow;
 
-
+        //adding the main svg group which holds the complete graph
         var graph_g = svg.append("g");
-        settings.graphObjects.graph_g = graph_g;
+        cache.graphObjects.graph_g = graph_g;
 
-        var zoom = d3.behavior.zoom().scaleExtent([settings.consts.MIN_ZOOM, settings.consts.MAX_ZOOM]);
+        //adding zoom
+        var zoom = d3.behavior.zoom().scaleExtent([consts.MIN_ZOOM, consts.MAX_ZOOM]);
         zoom = setEvents(zoom, {
           'zoom': function (d) {
             graph_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-            markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
+            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           }
         });
-        settings.graphObjects.zoom = zoom;
+        cache.graphObjects.zoom = zoom;
 
-        setInitialZoom(settings.graphObjects.graph_g, settings.graphObjects.zoom, settings.graphObjects.viewWindow, GRAVITY_TOP_POSITION, settings.consts.NODE_HEIGHT);
-        var allLinks = graph_g.selectAll(".link"),
-          allNodes = graph_g.selectAll(".node");
+        setInitialZoom(cache.graphObjects.graph_g, cache.graphObjects.zoom, cache.graphObjects.viewWindow, consts.ROOT_Y_POSITION, consts.NODE_HEIGHT);
 
-        settings.graphObjects.allNodes = allNodes;
-        settings.graphObjects.allLinks = allLinks;
+        var allLinks = graph_g.selectAll(".link");
+        cache.graphObjects.allLinks = allLinks;
 
+        var allNodes = graph_g.selectAll(".node");
+        cache.graphObjects.allNodes = allNodes;
+
+
+        //creating the force layout
         var force = d3.layout.force()
-          .size([width, height])
-          .gravity(GRAVITY)
-          .charge(CHARGE)
-          .friction(FRICTION)
+          .size([svgWidth, svgHeight])
+          .gravity(consts.GRAVITY)
+          .charge(consts.CHARGE)
+          .friction(consts.FRICTION)
           .on("tick", function (e) {
-            arrangeElements(settings.graphObjects.allLinks, settings.graphObjects.allNodes, settings.graphObjects.graph_g, settings.graphObjects.viewWindow, settings.graphObjects.diagonal);
+            arrangeElements(cache.graphObjects.allLinks, cache.graphObjects.allNodes, cache.graphObjects.graph_g, cache.graphObjects.viewWindow, cache.graphObjects.diagonal);
           });
+        cache.graphObjects.force = force;
 
-
-        settings.graphObjects.force = force;
-
+        //creating the tree layout
         var tree = d3.layout.tree()
-          .size([width, height])
+          .size([svgWidth, svgHeight])
+        cache.graphObjects.tree = tree;
 
-        settings.graphObjects.tree = tree;
 
+        //diagonal is the actual path which create the link between the nodes
         var diagonal = d3.svg.diagonal()
           .projection(function (d) {
             return [d.x, d.y];
           });
+        cache.graphObjects.diagonal = diagonal;
 
-        settings.graphObjects.diagonal = diagonal;
 
+        //calling the zoom function with the current svg
         svg.call(zoom);
       }
 
+
       function update(data) {
 
-        var flattenedNodes = flattenTreeToNodesArray(data, settings.width / 2, GRAVITY_TOP_POSITION),
+        //first we are flatting the node from a json tree structure to an array
+        var flattenedNodes = flattenTreeToNodesArray(data, cache.width / 2, consts.ROOT_Y_POSITION),
           nodesData = flattenedNodes,
-          linksData = d3.layout.tree().links(nodesData);
+          linksData = d3.layout.tree().links(nodesData); //we are using the tree layout of d3 in order to create the aray which holds the objects which d3 is wokring with (d)
 
-
-        // Update the links…
-        settings.graphObjects.allLinks = settings.graphObjects.allLinks.data(linksData, function (d) {
+        // Update the links according to the linksData
+        cache.graphObjects.allLinks = cache.graphObjects.allLinks.data(linksData, function (d) {
           return d.target.id;
         });
 
-        settings.graphObjects.allLinks.exit().remove();
+        //handling elements which were exists in the previous update run and in this iteration doesn't
+        cache.graphObjects.allLinks.exit().remove();
 
-        settings.graphObjects.allLinks.enter()
+        //handling the update / creation of the links according to the data
+        cache.graphObjects.allLinks.enter()
           .append("path")
           .attr("class", "link")
-          .attr("d", function (d, i) {
+          .attr("d", function (d, i) { //setting the value for set the diagonal
             if (d.source.x !== undefined && d.source.y !== undefined && d.target.x !== undefined && d.target.y !== undefined) {
-              return settings.graphObjects.diagonal(d, i)
+              return cache.graphObjects.diagonal(d, i)
             }
-          })
+          });
 
         // Update the nodes…
-        settings.graphObjects.allNodes = settings.graphObjects.allNodes.data(nodesData, function (d) {
+        cache.graphObjects.allNodes = cache.graphObjects.allNodes.data(nodesData, function (d) {
           return d.id;
         });
-        settings.graphObjects.allNodes.exit().remove();
+        cache.graphObjects.allNodes.exit().remove();
 
-        settings.graphObjects.allNodes
-          .enter()
+        //handling the update / creation of the nodes according to the data
+        cache.graphObjects.allNodes.enter()
           .append("g")
           .attr("class", "node-group")
-          .call(settings.graphObjects.force.drag)
-          .call(paintNodes)
+          .call(cache.graphObjects.force.drag)
+          .call(paintNodes);
 
+        //in any update we are updating the force as well
+        updateForceBehaviour(cache.graphObjects.force, nodesData, linksData);
 
-        //settings.graphObjects.allNodes = paintNodes(settings.graphObjects.allNodes, NODE_HEIGHT);
-
-        updateForceBehaviour(settings.graphObjects.force, nodesData, linksData);
-
-        settings.graphObjects.allNodes = setEvents(settings.graphObjects.allNodes, {
+        //settings events to the
+        cache.graphObjects.allNodes = setEvents(cache.graphObjects.allNodes, {
             'mouseover': function (d) {
               this.parentNode.appendChild(this); //on mouse over we appending the child again so it will be on top (z-index)
-              highlightPathToRoot(d, settings.graphObjects.graph_g);
+              highlightPathToRoot(d, cache.graphObjects.graph_g);
 
             },
             'mousedown': function (d) {
               d3.event.stopPropagation();
             },
             'mouseout': function (d) {
-              clearPathToRoot(d, settings.graphObjects.graph_g);
+              clearPathToRoot(d, cache.graphObjects.graph_g);
             },
             'dblclick.zoom': function (d) {
               d3.event.stopPropagation();
-              var dcx = (settings.width / 2 - d.x * settings.graphObjects.zoom.scale());
-              var dcy = (settings.height / 2 - d.y * settings.graphObjects.zoom.scale());
-              settings.graphObjects.zoom.translate([dcx, dcy]);
-              settings.graphObjects.graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + settings.graphObjects.zoom.scale() + ")");
-              markInFocusNodes(settings.graphObjects.graph_g, settings.graphObjects.allNodes, settings.graphObjects.viewWindow);
+              var dcx = (cache.width / 2 - d.x * cache.graphObjects.zoom.scale());
+              var dcy = (cache.height / 2 - d.y * cache.graphObjects.zoom.scale());
+              cache.graphObjects.zoom.translate([dcx, dcy]);
+              cache.graphObjects.graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + cache.graphObjects.zoom.scale() + ")");
+              markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
             },
             'click': function (d) {
 
@@ -255,11 +267,37 @@
           }
         );
 
-        arrangeElements(settings.graphObjects.allLinks, settings.graphObjects.allNodes, settings.graphObjects.graph_g, settings.graphObjects.viewWindow, settings.graphObjects.diagonal);
+        //this function actually moves the position of the different elements for an update
+        arrangeElements(cache.graphObjects.allLinks, cache.graphObjects.allNodes, cache.graphObjects.graph_g, cache.graphObjects.viewWindow, cache.graphObjects.diagonal);
+      }
 
+      /**
+       * settings a noew data to the force object and accordingly settings the link distance
+       * @param force
+       * @param nodesData
+       * @param linksData
+       */
+      function updateForceBehaviour(force, nodesData, linksData) {
+        force
+          .nodes(nodesData)
+          .links(linksData)
+          .linkDistance(function (d) {
+            if (!d.source.parent) {
+              return consts.ROOT_TO_CHILD_LINK_DISTANCE
+            }
+            return d.target.children && d.target.children.length > 0 ? consts.NODE_TO_NODE_WITH_CHILDREN_DISTANCE : consts.NODE_TO_EMPTY_NODE_LINK_DISTANCE;
+          })
       }
 
 
+      /**
+       * Set's the initial zoom according to the viewWindow and the root position
+       * @param graph_g
+       * @param zoom
+       * @param viewWindow
+       * @param rootY
+       * @param nodeHeight
+       */
       function setInitialZoom(graph_g, zoom, viewWindow, rootY, nodeHeight) {
         var yTransform = Number(viewWindow.attr("y")) + nodeHeight + (-1 * rootY);
         zoom.translate([0, yTransform]);
@@ -267,6 +305,17 @@
       }
 
 
+      /**
+       * This function set's the position of the different svg elements.
+       * It will be activated in every force tick function
+       * It can be called 200 times in a second
+       * AVOID ANY COMPLICATED CALCULATIONS !!!
+       * @param allLinks
+       * @param allNodes
+       * @param graph_g
+       * @param viewWindow
+       * @param diagonal
+       */
       function arrangeElements(allLinks, allNodes, graph_g, viewWindow, diagonal) {
         allLinks
           .attr("x1", function (d) {
@@ -292,34 +341,69 @@
             if (d.x && d.y) {
               return "translate(" + (d.x - (this.getBBox().width / 2)) + "," + (d.y) + ")";
             }
-
+          })
+          .classed("in-focus", function (d) {
+            return hitTest_roomRec(d, viewWindow) ? true : false;
           });
-        markInFocusNodes(graph_g, allNodes, viewWindow);
+
+      }
+
+      /**
+       * This function returns boolean value if a node is in the view window
+       * @param d
+       * @param viewWindow
+       * @returns {boolean}
+       */
+      function hitTest_roomRec(d, viewWindow) {
+        var gTransform = d3.transform(cache.graphObjects.graph_g.attr("transform")),
+          gx = gTransform.translate[0],
+          gy = gTransform.translate[1],
+          gScale = gTransform.scale[0],
+          realX = (gx / gScale) + d.x,
+          realY = (gy / gScale) + d.y;
+
+        var zoomRectX = Number(viewWindow.attr("x")),
+          zoomRectWidth = Number(viewWindow.attr("width")),
+          zoomRectY = Number(viewWindow.attr("y")),
+          zoomRectHeight = Number(viewWindow.attr("height"));
+
+        return (realX >= zoomRectX / gScale && realX <= (zoomRectX + zoomRectWidth) / gScale)
+          && (realY >= zoomRectY / gScale && realY <= (zoomRectY + zoomRectHeight) / gScale);
+
       }
 
 
-      function updateForceBehaviour(force, nodesData, linksData) {
-        force
-          .nodes(nodesData)
-          .links(linksData)
-          .linkDistance(function (d) {
-            if (!d.source.parent) {
-              return ROOT_TO_CHILD_LINK_DISTANCE
-            }
-            return d.target.children && d.target.children.length > 0 ? NODE_TO_NODE_WITH_CHILDREN_DISTANCE : NODE_TO_EMPTY_NODE_LINK_DISTANCE;
+      /**
+       * this function run over all nodes and set's a in-focus class according to the nodes position
+       * @param g
+       * @param allNodes
+       * @param viewWindow
+       */
+      function markInFocusNodes_general(g, allNodes, viewWindow) {
+        allNodes
+          .classed("in-focus", function (d) {
+            return hitTest_roomRec(d, viewWindow) ? true : false;
           })
       }
 
 
+      /**
+       * get's an object and return a flatland array
+       * @param root
+       * @param rootPosX
+       * @param rootPosY
+       * @returns {Array}
+       */
       function flattenTreeToNodesArray(root, rootPosX, rootPosY) {
         var nodes = [], i = 0;
+        //we are settings some initial value to the root object
         root.fixed = true;
         root.isRoot = true;
         root.x = rootPosX;
         root.y = rootPosY;
 
-        function recurse(node, depth, parent) {
 
+        function recurse(node, depth, parent) {
           if (node.children) {
             node.children.forEach(function (child) {
               child.parent = node;
@@ -333,15 +417,22 @@
         }
 
         recurse(root, 1);
+
         return nodes;
       }
 
 
-      // Exit any old nodes.
+      /**
+       * This function is creating the node
+       * @param allNodes
+       * @returns {*}
+       */
       function paintNodes(allNodes) {
 
         //first we creates the nodes in order to capture their width
-        var _WIDTH_ADDITION_TO_RECT = 50;
+        var _WIDTH_ADDITION_TO_RECT = 50,
+          _ROUND_CORNERS_VAL = 5;
+
         var text = allNodes.append("text")
           .text(function (d) {
             return d.name;
@@ -358,7 +449,7 @@
 
           });
 
-        var roundCornersVal = 5;
+
         //then we add a rect and uses the width of the rect
         var rect = allNodes
           .append("g")
@@ -373,15 +464,14 @@
           .attr("width", function (d) {
             return d.width + _WIDTH_ADDITION_TO_RECT;
           })
-          .attr("height", NODE_HEIGHT)
+          .attr("height", consts.NODE_HEIGHT)
           .style("fill", function (d) {
             return setColorByStatus(d.status);
           })
           .style("stroke", "black")
           .style("stroke-width", "1px")
-          .attr("rx", roundCornersVal)
-          .attr("ry", roundCornersVal);
-
+          .attr("rx", _ROUND_CORNERS_VAL)
+          .attr("ry", _ROUND_CORNERS_VAL);
 
         var rectButtons =
           rect.append("g")
@@ -398,6 +488,7 @@
           .append("g");
 
 
+        //eye
         pinButtonsContainer
           .append("svg:image")
           .attr("class", "img pin-button")
@@ -406,6 +497,7 @@
           .attr("height", 12)
 
 
+        //eye with a slash
         pinButtonsContainer
           .append("svg:image")
           .attr("class", "img un-pin-button")
@@ -441,44 +533,6 @@
           }
         });
 
-        function watchNode(d) {
-
-          setAttrToAllChildren(d, "watching", true);
-
-          d3.select("svg")
-            .classed("hide-all", true);
-
-          allNodes.each(function(d){
-            d3.select(this).classed("watching", function (d) {
-              return d.watching;
-            })
-          })
-
-        }
-
-        function unWatchNode(d) {
-          d.fixed = false;
-
-          // we want to make sure that there are no children which the user already selected
-          var ifFunction = function (d) {
-            return !cache.watchingElements[d.id];
-          };
-
-          setAttrToAllChildren(d, "watching", false, ifFunction);
-
-          if(Object.keys(cache.watchingElements).length == 0){
-            d3.select("svg")
-              .classed("hide-all", false);
-          }
-
-
-          allNodes
-            .classed("watching", function (d) {
-              return d.watching;
-            })
-
-        }
-
 
         rectButtons
           .append("svg:image")
@@ -493,7 +547,7 @@
               d._children = d.children;
               d.children = null;
             }
-            update(settings.data);
+            update(cache.data);
             allNodes.selectAll(".rect-buttons")
               .attr("class", function (d) {
                 return setClassToButtonsContainer(d);
@@ -514,7 +568,7 @@
               d.children = d._children;
               d._children = null;
             }
-            update(settings.data);
+            update(cache.data);
             allNodes.selectAll(".rect-buttons")
               .attr("class", function (d) {
                 return setClassToButtonsContainer(d);
@@ -525,7 +579,7 @@
         var circle = allNodes
           .append("circle")
           .attr("class", "node-circle")
-          .attr("r", NODE_HEIGHT / 4)
+          .attr("r", consts.NODE_HEIGHT / 4)
           .attr("cx", function (d) {
             return (d.width + _WIDTH_ADDITION_TO_RECT) / 2;
           })
@@ -545,8 +599,60 @@
           .attr("y", 10);
 
 
+        /**
+         * this function set's the classes for watching a node (when clicking the eye icon)
+         * @param d
+         */
+        function watchNode(d) {
+
+          setAttrToAllChildren(d, "watching", true);
+
+          //adding a general class to the svg
+          //TODO - distinguish between different SVG's (in a scenario when we will use this component more then once in a pate) the right way to do it is via an id which will be given to this controller
+          d3.select("svg")
+            .classed("hide-all", true);
+
+          //adding a watching class only to the nodes that is being watched
+          allNodes.each(function (d) {
+            d3.select(this).classed("watching", function (d) {
+              return d.watching;
+            })
+          })
+
+        }
+
+        /**
+         * Returns the situation as it was before (removing the watched item)
+         * @param d
+         */
+        function unWatchNode(d) {
+          d.fixed = false;
+
+          // we want to make sure that there are no children which the user already selected
+          var ifFunction = function (d) {
+            return !cache.watchingElements[d.id];
+          };
+
+          setAttrToAllChildren(d, "watching", false, ifFunction);
+
+          if (Object.keys(cache.watchingElements).length == 0) {
+            d3.select("svg")
+              .classed("hide-all", false);
+          }
+
+
+          allNodes
+            .classed("watching", function (d) {
+              return d.watching;
+            })
+
+        }
+
+
         return allNodes;
       }
+
+
 
       function setEvents(object, json) {
         angular.forEach(json, function (val, key) {
@@ -568,35 +674,6 @@
         return updateViewWindowSizes(svg, viewWindow, width, height);
       }
 
-      function markInFocusNodes(g, allNodes, viewWindow) {
-        var gTransform = d3.transform(g.attr("transform"));
-
-        var gx = gTransform.translate[0];
-        var gy = gTransform.translate[1];
-        var gScale = gTransform.scale[0];
-
-        allNodes.each(function (d) {
-          var realX = (gx / gScale) + d.x;
-          var realY = (gy / gScale) + d.y;
-          d.inFocus = hitTest_roomRec(realX, realY, gScale, viewWindow);
-        });
-
-        allNodes
-          .classed("in-focus", function (d) {
-            return d.inFocus ? true : false;
-          })
-      }
-
-      function hitTest_roomRec(realX, realY, gScale, viewWindow) {
-        var zoomRectX = Number(viewWindow.attr("x")),
-          zoomRectWidth = Number(viewWindow.attr("width")),
-          zoomRectY = Number(viewWindow.attr("y")),
-          zoomRectHeight = Number(viewWindow.attr("height"));
-
-        return (realX >= zoomRectX / gScale && realX <= (zoomRectX + zoomRectWidth) / gScale)
-          && (realY >= zoomRectY / gScale && realY <= (zoomRectY + zoomRectHeight) / gScale)
-          ;
-      }
 
       function updateViewWindowSizes(svg, viewWindow, windowWidth, windowHeight) {
         var svgWidth = Number(svg.attr("width"));
@@ -668,7 +745,7 @@
           },
           tree: function (force, _tree, duration, allNodes, allLinks, diagonal) {
             force.stop();
-            _tree.nodes(settings.data);  	// recalculate tree layout
+            _tree.nodes(cache.data);  	// recalculate tree layout
 
             // transition node groups
             allNodes.transition()
@@ -695,7 +772,7 @@
           }
         };
 
-        return layouts[layoutName](settings.graphObjects.force, settings.graphObjects.tree, 1000, settings.graphObjects.allNodes, settings.graphObjects.allLinks, settings.graphObjects.diagonal);
+        return layouts[layoutName](cache.graphObjects.force, cache.graphObjects.tree, 1000, cache.graphObjects.allNodes, cache.graphObjects.allLinks, cache.graphObjects.diagonal);
       }
 
       function setClassToButtonsContainer(d) {
@@ -712,6 +789,16 @@
         return _class.join(" ");
       }
 
+      /**
+       * This is a generic function
+       * it expect to have a nodeData, a attr name, a value and a condition
+       * Then it adds the attribute with the value to all children recursively
+       * if the condition is passing
+       * @param d
+       * @param attr
+       * @param value
+       * @param ifFunction
+       */
       function setAttrToAllChildren(d, attr, value, ifFunction) {
         if (!ifFunction) {
           ifFunction = function () {
