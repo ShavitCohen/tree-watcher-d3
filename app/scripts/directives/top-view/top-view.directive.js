@@ -14,7 +14,8 @@
       scope: {
         width: "=",
         height: "=",
-        data: "="
+        data: "=",
+        id: "@"
       },
       link: link
     };
@@ -133,7 +134,6 @@
         var svg = d3.select(elm[0]).append("svg")
           .attr("width", svgWidth)
           .attr("height", svgHeight);
-
         cache.graphObjects.svg = svg;
 
         var VIEW_WINDOW_WIDTH = svgWidth - (svgWidth / 3);
@@ -167,7 +167,6 @@
 
         var allNodes = graph_g.selectAll(".node");
         cache.graphObjects.allNodes = allNodes;
-
 
         //creating the force layout
         var force = d3.layout.force()
@@ -240,32 +239,37 @@
         //in any update we are updating the force as well
         updateForceBehaviour(cache.graphObjects.force, nodesData, linksData);
 
-        //settings events to the
-        cache.graphObjects.allNodes = setEvents(cache.graphObjects.allNodes, {
-            'mouseover': function (d) {
-              this.parentNode.appendChild(this); //on mouse over we appending the child again so it will be on top (z-index)
-              highlightPathToRoot(d, cache.graphObjects.graph_g);
 
-            },
-            'mousedown': function (d) {
-              d3.event.stopPropagation();
-            },
-            'mouseout': function (d) {
-              clearPathToRoot(d, cache.graphObjects.graph_g);
-            },
-            'dblclick.zoom': function (d) {
-              d3.event.stopPropagation();
-              var dcx = (cache.width / 2 - d.x * cache.graphObjects.zoom.scale());
-              var dcy = (cache.height / 2 - d.y * cache.graphObjects.zoom.scale());
-              cache.graphObjects.zoom.translate([dcx, dcy]);
-              cache.graphObjects.graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + cache.graphObjects.zoom.scale() + ")");
-              markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
-            },
-            'click': function (d) {
+        setEvents(cache.graphObjects.allNodes, {
+          'mouseover': function (d) {
 
-            }
+            //highlightPathToRoot(d, cache.graphObjects.graph_g);
+            d3.select(this).classed("on-mouse-over",true);
+            cache.graphObjects.allNodes.sort(function (a, b) { // select the parent and sort the path's
+              if (a.id != d.id) return -1;               // a is not the hovered element, send "a" to the back
+              else return 1;
+            });
+          },
+          'mousedown': function (d) {
+            d3.event.stopPropagation();
+          },
+          'mouseout': function (d) {
+            d3.select(this).classed("on-mouse-over",false);
+            //clearPathToRoot(d, cache.graphObjects.graph_g);
+          },
+          'dblclick.zoom': function (d) {
+            d3.event.stopPropagation();
+            var dcx = (cache.width / 2 - d.x * cache.graphObjects.zoom.scale());
+            var dcy = (cache.height / 2 - d.y * cache.graphObjects.zoom.scale());
+            cache.graphObjects.zoom.translate([dcx, dcy]);
+            cache.graphObjects.graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + cache.graphObjects.zoom.scale() + ")");
+            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
+          },
+          'click': function (d) {
+
           }
-        );
+        });
+
 
         //this function actually moves the position of the different elements for an update
         arrangeElements(cache.graphObjects.allLinks, cache.graphObjects.allNodes, cache.graphObjects.graph_g, cache.graphObjects.viewWindow, cache.graphObjects.diagonal);
@@ -507,6 +511,11 @@
 
 
         setEvents(pinButtonsContainer, {
+          'mouseout': function (d) {
+            if (Object.keys(cache.watchingElements).length === 0) {
+              unWatchNode(d);
+            }
+          },
           'click': function (d) {
             if (!cache.watchingElements[d.id]) {
               d.fixed = true;
@@ -525,12 +534,8 @@
             if (Object.keys(cache.watchingElements).length === 0) {
               watchNode(d);
             }
-          },
-          'mouseout': function (d) {
-            if (Object.keys(cache.watchingElements).length === 0) {
-              unWatchNode(d);
-            }
           }
+
         });
 
 
@@ -651,7 +656,6 @@
 
         return allNodes;
       }
-
 
 
       function setEvents(object, json) {

@@ -2,7 +2,7 @@
 
   svg.hide-all {
     .node-group {
-      .rect,text {
+      .rect, text {
         opacity: 0;
       }
 
@@ -10,8 +10,8 @@
         opacity: 0.3;
       }
 
-      &.watching.in-focus{
-        .rect,text {
+      &.watching.in-focus {
+        .rect, text {
           opacity: 1;
         }
         .node-circle {
@@ -19,9 +19,8 @@
         }
 
       }
+
     }
-
-
 
   }
 
@@ -111,6 +110,14 @@
       }
       .node-circle {
         opacity: 0;
+      }
+    }
+    &.on-mouse-over {
+      .rect, .rect-text {
+        opacity: 1!important;
+      }
+      .node-circle {
+        opacity: 0!important;
       }
     }
   }
