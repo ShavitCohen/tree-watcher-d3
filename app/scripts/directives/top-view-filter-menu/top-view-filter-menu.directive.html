@@ -1,10 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
+<div class="top-view-filter-menu">
+  <div class="filter-icon" ng-click="showFilterBar=!showFilterBar">
+    <i class="fa fa-filter"></i>
+  </div>
 
-</body>
-</html>
+  <div class="filter-wrapper" ng-class="{show:showFilterBar}">
+    <div>
+      <strong>Status</strong>
+    </div>
+    <div>
+      <div ng-repeat="filterKey in filterKeys">
+        <label class="text-capitalize">
+          <input type="checkbox" ng-model="filters[filterKey]" ng-click="statusChanged(filterKey,filters[filterKey])">
+          {{filterKey}}
+        </label>
+      </div>
+    </div>
+  </div>
+
+</div>

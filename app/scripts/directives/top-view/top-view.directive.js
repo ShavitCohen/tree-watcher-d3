@@ -97,6 +97,20 @@
         }
       };
 
+      scope.filterMenuObj = {
+        filters: {
+          error: true,
+          noData: true,
+          warning: true,
+          good: true
+        },
+        statusChanged: function (status, val) {
+
+          cache.data = filterDataByStatus(cache.data, scope.filterMenuObj.filters);
+          update(cache.data);
+        }
+      };
+
       init();
 
 
@@ -205,6 +219,11 @@
           nodesData = flattenedNodes,
           linksData = d3.layout.tree().links(nodesData); //we are using the tree layout of d3 in order to create the aray which holds the objects which d3 is wokring with (d)
 
+        linksData = _.filter(linksData, function (d) {
+          return !d.target.__hidden;
+        });
+
+
         // Update the links according to the linksData
         cache.graphObjects.allLinks = cache.graphObjects.allLinks.data(linksData, function (d) {
           return d.target.id;
@@ -215,7 +234,7 @@
 
         //handling the update / creation of the links according to the data
         cache.graphObjects.allLinks.enter()
-          .append("path")
+          .insert("path", ":first-child")// we use insert instead of 'append' since we want that the path will always be at the beginning, this is how we will be able to maintain the order (z-index) in a way, that no matter what, the nodes will be on top of the paths
           .attr("class", "link")
           .attr("d", function (d, i) { //setting the value for set the diagonal
             if (d.source.x !== undefined && d.source.y !== undefined && d.target.x !== undefined && d.target.y !== undefined) {
@@ -236,25 +255,20 @@
           .call(cache.graphObjects.force.drag)
           .call(paintNodes);
 
-        //in any update we are updating the force as well
-        updateForceBehaviour(cache.graphObjects.force, nodesData, linksData);
-
 
         setEvents(cache.graphObjects.allNodes, {
           'mouseover': function (d) {
-
-            //highlightPathToRoot(d, cache.graphObjects.graph_g);
-            d3.select(this).classed("on-mouse-over",true);
+            d3.select(this).classed("on-mouse-over", true);
             cache.graphObjects.allNodes.sort(function (a, b) { // select the parent and sort the path's
-              if (a.id != d.id) return -1;               // a is not the hovered element, send "a" to the back
-              else return 1;
+              if (a.id == d.id) return 1;               // a is not the hovered element, send "a" to the back
+              //else return 1;
             });
           },
           'mousedown': function (d) {
             d3.event.stopPropagation();
           },
           'mouseout': function (d) {
-            d3.select(this).classed("on-mouse-over",false);
+            d3.select(this).classed("on-mouse-over", false);
             //clearPathToRoot(d, cache.graphObjects.graph_g);
           },
           'dblclick.zoom': function (d) {
@@ -268,11 +282,14 @@
           'click': function (d) {
 
           }
+
         });
 
 
-        //this function actually moves the position of the different elements for an update
+        updateLayoutBehaviour(cache.layout, nodesData, linksData);
         arrangeElements(cache.graphObjects.allLinks, cache.graphObjects.allNodes, cache.graphObjects.graph_g, cache.graphObjects.viewWindow, cache.graphObjects.diagonal);
+
+
       }
 
       /**
@@ -281,16 +298,26 @@
        * @param nodesData
        * @param linksData
        */
-      function updateForceBehaviour(force, nodesData, linksData) {
-        force
-          .nodes(nodesData)
-          .links(linksData)
-          .linkDistance(function (d) {
-            if (!d.source.parent) {
-              return consts.ROOT_TO_CHILD_LINK_DISTANCE
-            }
-            return d.target.children && d.target.children.length > 0 ? consts.NODE_TO_NODE_WITH_CHILDREN_DISTANCE : consts.NODE_TO_EMPTY_NODE_LINK_DISTANCE;
-          })
+      function updateLayoutBehaviour(currentLayout, nodesData, linksData) {
+
+        switch (currentLayout) {
+          case "force":
+            cache.graphObjects.force
+              .nodes(nodesData)
+              .links(linksData)
+              .linkDistance(function (d) {
+                if (!d.source.parent) {
+                  return consts.ROOT_TO_CHILD_LINK_DISTANCE
+                }
+                return d.target.children && d.target.children.length > 0 ? consts.NODE_TO_NODE_WITH_CHILDREN_DISTANCE : consts.NODE_TO_EMPTY_NODE_LINK_DISTANCE;
+              })
+            break;
+          case "tree":
+            activateLayout("tree");
+            break;
+        }
+
+
       }
 
 
@@ -338,7 +365,8 @@
             if (d.source.x !== undefined && d.source.y !== undefined && d.target.x !== undefined && d.target.y !== undefined) {
               return diagonal(d, i)
             }
-          });
+          })
+
 
         allNodes
           .attr("transform", function (d) {
@@ -350,7 +378,9 @@
             return hitTest_roomRec(d, viewWindow) ? true : false;
           });
 
+
       }
+
 
       /**
        * This function returns boolean value if a node is in the view window
@@ -408,16 +438,18 @@
 
 
         function recurse(node, depth, parent) {
-          if (node.children) {
+          if (node.children && !node.__hidden) {
             node.children.forEach(function (child) {
               child.parent = node;
               depth++;
               recurse(child, depth, node);
             });
           }
-          if (!node.id) node.id = ++i;
-          node.depth = depth;
-          nodes.push(node);
+          if (!node.__hidden) {
+            if (!node.id) node.id = ++i;
+            node.depth = depth;
+            nodes.push(node);
+          }
         }
 
         recurse(root, 1);
@@ -509,9 +541,10 @@
           .attr("width", 12)
           .attr("height", 12)
 
-
+        var isMouseOverAfterTime = false;
         setEvents(pinButtonsContainer, {
           'mouseout': function (d) {
+            isMouseOverAfterTime = false;
             if (Object.keys(cache.watchingElements).length === 0) {
               unWatchNode(d);
             }
@@ -531,9 +564,15 @@
               .classed("root-watching", d.watchingRoot);
           },
           'mouseover': function (d) {
-            if (Object.keys(cache.watchingElements).length === 0) {
-              watchNode(d);
-            }
+            isMouseOverAfterTime = true;
+            setTimeout(function () {
+              if (isMouseOverAfterTime) {
+                if (Object.keys(cache.watchingElements).length === 0) {
+                  watchNode(d);
+                }
+              }
+            }, 200);
+
           }
 
         });
@@ -549,8 +588,8 @@
           .on("click", function (d) {
             if (d3.event.defaultPrevented) return; // ignore drag
             if (d.children) {
-              d._children = d.children;
-              d.children = null;
+              d.collapsedParent = true;
+              setAttrToAllChildren(d, "__hidden", true);
             }
             update(cache.data);
             allNodes.selectAll(".rect-buttons")
@@ -568,10 +607,9 @@
           .attr("height", 12)
           .attr("x", 15)
           .on("click", function (d) {
-            if (d3.event.defaultPrevented) return; // ignore drag
-            if (d._children) {
-              d.children = d._children;
-              d._children = null;
+            d.collapsedParent = false;
+            if (d.children) {
+              setAttrToAllChildren(d, "__hidden", false);
             }
             update(cache.data);
             allNodes.selectAll(".rect-buttons")
@@ -609,7 +647,7 @@
          * @param d
          */
         function watchNode(d) {
-
+          d.watching = true;
           setAttrToAllChildren(d, "watching", true);
 
           //adding a general class to the svg
@@ -631,6 +669,7 @@
          * @param d
          */
         function unWatchNode(d) {
+
           d.fixed = false;
 
           // we want to make sure that there are no children which the user already selected
@@ -638,6 +677,9 @@
             return !cache.watchingElements[d.id];
           };
 
+          if (ifFunction(d)) {
+            d.watching = false;
+          }
           setAttrToAllChildren(d, "watching", false, ifFunction);
 
           if (Object.keys(cache.watchingElements).length == 0) {
@@ -650,7 +692,6 @@
             .classed("watching", function (d) {
               return d.watching;
             })
-
         }
 
 
@@ -744,10 +785,12 @@
 
       function activateLayout(layoutName) {
         var layouts = {
-          force: function (_force) {
-            _force.start();
+          force: function (force, _tree, duration, allNodes, allLinks, diagonal) {
+            force.start();
+            allNodes.call(force.drag);
           },
           tree: function (force, _tree, duration, allNodes, allLinks, diagonal) {
+            allNodes.on('mousedown.drag', null);
             force.stop();
             _tree.nodes(cache.data);  	// recalculate tree layout
 
@@ -787,7 +830,7 @@
         if (d.children && d.children.length > 0) {
           _class.push("has-children");
         }
-        if (d._children && d._children.length > 0) {
+        if (d.collapsedParent) {
           _class.push("has-children collapsed");
         }
         return _class.join(" ");
@@ -809,17 +852,40 @@
             return true
           };
         }
-
         if (ifFunction(d)) {
-          d[attr] = value;
-
-          var children = d.children || d._children;
+          var children = d.children;
           if (children) {
             children.forEach(function (child) {
+              child[attr] = value;
               setAttrToAllChildren(child, attr, value, ifFunction);
             })
+          } else {
+            d[attr] = value;
           }
         }
+      }
+
+      function filterDataByStatus(data, filters) {
+        angular.forEach(data.children, function (child) {
+          child.__hidden = (!isFiltered(child, filters));
+          filterDataByStatus(child, filters);
+        });
+        return data;
+      }
+
+      function isFiltered(node, filters) {
+        var filterMap = {
+          "20": "good",
+          "15": "good",
+          "10": "good",
+          "5": "good",
+          "0": "error",
+          "-1": "warning",
+          "-2": "warning",
+          "-3": "warning",
+          "-4": "warning"
+        };
+        return filters[filterMap[node.status] || 'noData'];
       }
 
     }
