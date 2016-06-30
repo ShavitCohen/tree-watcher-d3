@@ -183,13 +183,13 @@ module.exports = function (grunt) {
     wiredep: {
       app: {
         src: ['<%= yeoman.app %>/index.html'],
-        ignorePath:  /\.\.\//
+        ignorePath: /\.\.\//
       },
       test: {
         devDependencies: true,
         src: '<%= karma.unit.configFile %>',
-        ignorePath:  /\.\.\//,
-        fileTypes:{
+        ignorePath: /\.\.\//,
+        fileTypes: {
           js: {
             block: /(([\s\t]*)\/{2}\s*?bower:\s*?(\S*))(\n|\r|.)*?(\/{2}\s*endbower)/gi,
             detect: {
@@ -404,7 +404,15 @@ module.exports = function (grunt) {
           cwd: '.tmp/images',
           dest: '<%= yeoman.dist %>/images',
           src: ['generated/*']
-        }]
+        },
+          {
+            expand: true,
+            dot: true,
+            cwd: 'bower_components/components-font-awesome', // change this for font-awesome
+            src: ['fonts/*.*'],
+            dest: '<%= yeoman.dist %>',
+          }
+        ]
       },
       styles: {
         expand: true,
