@@ -83,12 +83,12 @@
           changeViewWindowWidth: function (val) {
             cache.viewWindowWidthValue = val;
             updateViewWindowSizes(cache.graphObjects.svg, cache.graphObjects.viewWindow, val, cache.viewWindowHeightValue);
-            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
+            markInFocusNodes_general(cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           },
           changeViewWindowHeight: function (val) {
             cache.viewWindowHeightValue = val;
             updateViewWindowSizes(cache.graphObjects.svg, cache.graphObjects.viewWindow, cache.viewWindowWidthValue, val);
-            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
+            markInFocusNodes_general(cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           },
           changeTreeLayout: function (val) {
             cache.layout = val;
@@ -113,16 +113,14 @@
 
       init();
 
-
       function init() {
 
         angular.element(elm).addClass("top-view");
 
         initCacheObj(scope.width, scope.height);
 
-        /**
-         * Any change in the data should trigger an update
-         */
+
+        // Any change in the data should trigger an update
         scope.$watch("data", function (val, old) {
           if (val) {
             cache.data = val;
@@ -169,7 +167,7 @@
         zoom = setEvents(zoom, {
           'zoom': function (d) {
             graph_g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
+            markInFocusNodes_general(cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           }
         });
         cache.graphObjects.zoom = zoom;
@@ -212,8 +210,13 @@
       }
 
 
+      /**
+       * When the data is being change, this function is being called
+       * and it handle the new nodes that should be added / removed
+       * This is a core function for working with D3
+       * @param data
+       */
       function update(data) {
-
         //first we are flatting the node from a json tree structure to an array
         var flattenedNodes = flattenTreeToNodesArray(data, cache.width / 2, consts.ROOT_Y_POSITION),
           nodesData = flattenedNodes,
@@ -277,20 +280,16 @@
             var dcy = (cache.height / 2 - d.y * cache.graphObjects.zoom.scale());
             cache.graphObjects.zoom.translate([dcx, dcy]);
             cache.graphObjects.graph_g.attr("transform", "translate(" + dcx + "," + dcy + ")scale(" + cache.graphObjects.zoom.scale() + ")");
-            markInFocusNodes_general(cache.graphObjects.graph_g, cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
+            markInFocusNodes_general(cache.graphObjects.allNodes, cache.graphObjects.viewWindow);
           },
           'click': function (d) {
-
           }
-
         });
-
 
         updateLayoutBehaviour(cache.layout, nodesData, linksData);
         arrangeElements(cache.graphObjects.allLinks, cache.graphObjects.allNodes, cache.graphObjects.graph_g, cache.graphObjects.viewWindow, cache.graphObjects.diagonal);
-
-
       }
+
 
       /**
        * settings a noew data to the force object and accordingly settings the link distance
@@ -316,8 +315,6 @@
             activateLayout("tree");
             break;
         }
-
-
       }
 
 
@@ -365,7 +362,7 @@
             if (d.source.x !== undefined && d.source.y !== undefined && d.target.x !== undefined && d.target.y !== undefined) {
               return diagonal(d, i)
             }
-          })
+          });
 
 
         allNodes
@@ -375,10 +372,8 @@
             }
           })
           .classed("in-focus", function (d) {
-            return hitTest_roomRec(d, viewWindow) ? true : false;
+            return hitTest_roomRec(d, viewWindow);
           });
-
-
       }
 
 
@@ -409,14 +404,13 @@
 
       /**
        * this function run over all nodes and set's a in-focus class according to the nodes position
-       * @param g
        * @param allNodes
        * @param viewWindow
        */
-      function markInFocusNodes_general(g, allNodes, viewWindow) {
+      function markInFocusNodes_general(allNodes, viewWindow) {
         allNodes
           .classed("in-focus", function (d) {
-            return hitTest_roomRec(d, viewWindow) ? true : false;
+            return hitTest_roomRec(d, viewWindow)
           })
       }
 
@@ -437,6 +431,12 @@
         root.y = rootPosY;
 
 
+        /**
+         * flattened the tree recursively
+         * @param node
+         * @param depth
+         * @param parent
+         */
         function recurse(node, depth, parent) {
           if (node.children && !node.__hidden) {
             node.children.forEach(function (child) {
@@ -661,15 +661,14 @@
               return d.watching;
             })
           })
-
         }
+
 
         /**
          * Returns the situation as it was before (removing the watched item)
          * @param d
          */
         function unWatchNode(d) {
-
           d.fixed = false;
 
           // we want to make sure that there are no children which the user already selected
@@ -680,6 +679,7 @@
           if (ifFunction(d)) {
             d.watching = false;
           }
+
           setAttrToAllChildren(d, "watching", false, ifFunction);
 
           if (Object.keys(cache.watchingElements).length == 0) {
@@ -687,18 +687,22 @@
               .classed("hide-all", false);
           }
 
-
           allNodes
             .classed("watching", function (d) {
               return d.watching;
             })
         }
 
-
         return allNodes;
       }
 
 
+      /**
+       * this small function sets events to an object according to a json given
+       * @param object
+       * @param json
+       * @returns {*}
+       */
       function setEvents(object, json) {
         angular.forEach(json, function (val, key) {
           object.on(key, val);
@@ -707,6 +711,13 @@
         return object;
       }
 
+      /**
+       * Creates the view Window (the rect which represent 'rentgen window')
+       * @param svg
+       * @param width
+       * @param height
+       * @returns {*}
+       */
       function setViewWindow(svg, width, height) {
 
         var viewWindow = svg.append("rect")
@@ -720,6 +731,13 @@
       }
 
 
+      /**
+       * Updates the vew window size
+       * @param svg
+       * @param viewWindow
+       * @param windowWidth
+       * @param windowHeight
+       */
       function updateViewWindowSizes(svg, viewWindow, windowWidth, windowHeight) {
         var svgWidth = Number(svg.attr("width"));
         var svgHeight = Number(svg.attr("height"));
@@ -733,21 +751,30 @@
 
       }
 
+
+      /**
+       *
+       * @param status
+       * @returns {*|string}
+       */
       function setColorByStatus(status) {
         var colors = {
-          "20": "#66CC33",
-          "15": "#66CC33",
-          "10": "#66CC33",
-          "5": "#66CC33",
-          "0": "#DC0D26",
-          "-1": "#DAB426",
-          "-2": "#DAB426",
-          "-3": "#DAB426",
-          "-4": "#DAB426"
+          "20": "#66CC33", "15": "#66CC33",
+          "10": "#66CC33", "5": "#66CC33",
+          "0": "#DC0D26", "-1": "#DAB426",
+          "-2": "#DAB426", "-3": "#DAB426",
+          "-4": "#DAB426", "noData": "#699BDD"
         };
-        return colors[status] || "#699BDD";
+
+        return colors[status] || colors.noData;
       }
 
+
+      /**
+       * This function is painting the path to root
+       * according to pathToParent = true;
+       * @param graph_g
+       */
       function paintPathToRoot(graph_g) {
         graph_g.selectAll(".rect")
           .style("stroke", function (d) {
@@ -760,8 +787,13 @@
           });
       }
 
-      function clearPathToRoot(d, graph_g) {
 
+      /**
+       * clears the path to root
+       * @param d
+       * @param graph_g
+       */
+      function clearPathToRoot(d, graph_g) {
         setPathToParent(d);
         paintPathToRoot(graph_g);
         function setPathToParent(d) {
@@ -772,6 +804,12 @@
         }
       }
 
+
+      /**
+       * Drows the path to root
+       * @param d
+       * @param graph_g
+       */
       function highlightPathToRoot(d, graph_g) {
         setPathToParent(d);
         paintPathToRoot(graph_g);
@@ -783,6 +821,13 @@
         }
       }
 
+
+      /**
+       * activating a layout, e.g: being used when switching between
+       * force layout to tree layout
+       * @param layoutName
+       * @returns {*}
+       */
       function activateLayout(layoutName) {
         var layouts = {
           force: function (force, _tree, duration, allNodes, allLinks, diagonal) {
@@ -822,6 +867,13 @@
         return layouts[layoutName](cache.graphObjects.force, cache.graphObjects.tree, 1000, cache.graphObjects.allNodes, cache.graphObjects.allLinks, cache.graphObjects.diagonal);
       }
 
+
+      /**
+       * this function refer to the container which holds the buttons
+       * related a node (e.g: plus, minus, eye button)
+       * @param d
+       * @returns {string}
+       */
       function setClassToButtonsContainer(d) {
         var _class = ["rect-buttons"];
         if (d.fixed == true && !d.isRoot) {
@@ -835,6 +887,7 @@
         }
         return _class.join(" ");
       }
+
 
       /**
        * This is a generic function
@@ -865,6 +918,15 @@
         }
       }
 
+
+      /**
+       * this function is recursive and it adds a __hidden attribute to
+       * all elements that should be hidden according to status filtration.
+       * This is the logic that actually get's the filters which came back from the directive and mark the elements that should be removed
+       * @param data
+       * @param filters
+       * @returns {*}
+       */
       function filterDataByStatus(data, filters) {
         angular.forEach(data.children, function (child) {
           child.__hidden = (!isFiltered(child, filters));
@@ -873,6 +935,12 @@
         return data;
       }
 
+      /**
+       * returns boolean value rather a node should be filtered or not.
+       * @param node
+       * @param filters
+       * @returns {*}
+       */
       function isFiltered(node, filters) {
         var filterMap = {
           "20": "good",
