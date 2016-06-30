@@ -256,7 +256,10 @@
           .append("g")
           .attr("class", "node-group")
           .call(cache.graphObjects.force.drag)
-          .call(paintNodes);
+          .call(paintNodes)
+          .classed("watching", function (d) { //handle a watch node in case of collapse/un-collapse
+            return d.watching;
+          });
 
 
         setEvents(cache.graphObjects.allNodes, {
@@ -656,7 +659,7 @@
             .classed("hide-all", true);
 
           //adding a watching class only to the nodes that is being watched
-          allNodes.each(function (d) {
+          cache.graphObjects.allNodes.each(function (d) {
             d3.select(this).classed("watching", function (d) {
               return d.watching;
             })
@@ -687,7 +690,7 @@
               .classed("hide-all", false);
           }
 
-          allNodes
+          cache.graphObjects.allNodes
             .classed("watching", function (d) {
               return d.watching;
             })
